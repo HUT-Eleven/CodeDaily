@@ -38,8 +38,6 @@ javaweb： B/S   浏览器- >web服务软件
 
 
 
-
-
 # 2.Tomcat服务器
 
 #### 1 tomcat服务器如何共享文件
@@ -62,13 +60,8 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 1）闪退
         原因： tomcat服务器是用java写的，启动时需要JVM运行，所以会在本地环境变量中查找一个叫JAVA_HOME的环境变量。
         解决办法： 在本地环境变量中添加JAVA_HOME
-        		JAVA_HOME= C:\Program Files\Java\jdk1.6.0_30 （不要加bin）
-
-2）端口占用问题
-		解决办法：
-				1）把占用端口的软件停止掉（进程杀死）
-				2）改变tomcat服务器启动端口（conf/server.xml中修改）			
-3）CATALINA_HOME环境变量
+        		JAVA_HOME= C:\Program Files\Java\jdk1.6.0_30 （不要加bin）		
+2）CATALINA_HOME环境变量
 		原因： tomcat在启动后会通过CATALINA_HOME环境变量加装tomcat的根目录下的文件（例如conf、webapps）
         解决办法：建议不要设置CATALINA_HOME环境变量,它自动会在所点击startup.bat所在目录中。
         注意：安装版的tomcat会自动设置CATALINA_HOME环境变量 
@@ -115,7 +108,7 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 再补充：浏览网页服务默认的端口号都是80，如果在server.xml文件中把端口号改成80，就连端口号都不用写了。
 ```
 
-弊端：tomcat软件和web应用放在同一个目录中（就好比把做好的图放在ps的安装目录中）。
+
 
 2)配置虚拟网站+修改server.xml
 
@@ -218,10 +211,6 @@ web.xml文件代码栗子：
 
 ```
 其他知识：
-1.一台电脑上可以同时启动多个Tomcat服务器，只要端口号不一样就可以了。
-
-3.部署的目的：web应用想要运行，首先要部署，是为了让tomcat服务软件能够找到你所写的web应用。(其实部署可以理解为“智能复制”)
-
 4.继承HttpServlet类之后，其中的doget()、dopost()方法可以看做是一个被触发的动作，当浏览发出请求时，请求会被封装成对象（响应也是会被封装成对象）。
 ```
 
