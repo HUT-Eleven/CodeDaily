@@ -61,7 +61,7 @@
 
 2. 在工具类里面，使用静态代码块
 
-    （静态代码块重要做这两件事：读取属性、注册驱动）
+    （静态代码块主要做这两件事：读取属性、注册驱动）
 
     ```java
     static String driverClass = null;
@@ -102,6 +102,8 @@ executeQuery(String sql)：执行DQL语句：select，返回一个结果集代�
 ​
 
 ## Statement和PreparedStatement的区别
+
+> Statement基本已经弃用
 
 #####          一、语法结构不同
 
@@ -184,10 +186,6 @@ executeQuery(String sql)：执行DQL语句：select，返回一个结果集代�
 
 ## Tip:
 
-	2.JDBC两个主要的类：Connection和Statement
-		连接、提交、事务这方面的问题应该要想到Connection；
-		执行、获取这些操作应该要想到Statement和其子类。
-	3.JDBC还有：操作大容量数据类型、使用类路径读取配置文件、MySql在JDBC上的不同 这三个内容没学。
-	4.!!!PreparedStatement设置参数时，不能把表名、列名作为参数设定，可以改成原始的方式：
+	!!!PreparedStatement设置参数时，不能把表名、列名作为参数设定，可以改成原始的方式：
 	String sql = "UPDATE  book SET "+field+" = ? WHERE bookid=?";
 	其中field代表表名或者列名，以“拼接”的方式注入，就是之前statement的静态注入方式，这种方式存在安全问题。
