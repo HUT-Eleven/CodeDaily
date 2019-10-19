@@ -30,19 +30,19 @@
 
 6) process-resources 处理项目主资源文件。对src/main/resources目录的内容进行变量替换等工作后，复制到项目输出的主classpath目录中。
 
-7） compile 编译项目的主源代码
+7） **compile** 编译项目的主源代码
 
 10) process-test-sources 处理项目测试资源文件
 
 13）test-compile 编译项目的测试代码
 
-15) test 使用单元测试框架运行测试，测试代码不会被打包或部署
+15) **test** 使用单元测试框架运行测试，测试代码不会被打包或部署
 
-17）package 接受编译好的代码，打包成可发布的格式
+17）**package** 接受编译好的代码，打包成可发布的格式
 
-22) install 将包安装到Maven本地仓库，供本地其他Maven项目使用
+22) **install** 将包安装到Maven本地仓库，供本地其他Maven项目使用
 
-23）deploy 将最终的包复制到远程仓库，供其他开发人员和Maven项目使用
+23）**deploy** 将最终的包复制到远程仓库，供其他开发人员和Maven项目使用
 
 ##### site生命周期
 > 建立和发布项目站点
