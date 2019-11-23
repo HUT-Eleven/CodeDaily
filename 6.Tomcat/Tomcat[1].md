@@ -4,7 +4,6 @@
 从物理上来说，就是一台PC机器，配置比较高。不同功能衍生出了不同的服务器，例如：
 1.web服务器：在PC机器安装web服务软件，提供web服务
 2.数据库服务器：在PC机器安装了数据库软件，提供数据管理服务
-3.邮件服务器：在PC机器上安装了可以收发邮件服务软件
 ```
 
 
@@ -20,11 +19,16 @@ javaweb： B/S   浏览器- >web服务软件
 
 # 2.Tomcat服务器
 
+> tomcat是java语言开发
+
 #### 1 tomcat服务器如何共享文件
 
-```java
-规则：把文件拷贝到webappps目录下，不能单独共享文件，必须以目录（网站）形式共享
+规则：把文件拷贝到webappps目录下，不能单独共享文件，必须以**目录**（网站）形式共享.
+以下就实现了在网站中访问demo.html:
 
+![1574519652880](assets/1574519652880.png)
+
+```java
 URL：统一资源定位符。用于定位基于http协议的资源。
 
 http协议执行流程:
@@ -42,7 +46,7 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
         解决办法： 在本地环境变量中添加JAVA_HOME
         		JAVA_HOME= C:\Program Files\Java\jdk1.6.0_30 （不要加bin）		
 2）CATALINA_HOME环境变量
-		原因： tomcat在启动后会通过CATALINA_HOME环境变量加装tomcat的根目录下的文件（例如conf、webapps）
+		原因： 点击start.sh后会先加载JAVA_HOME环境变量，再加载CATALINA_HOME环境变量（tomcat的家）
         解决办法：建议不要设置CATALINA_HOME环境变量,它自动会在所点击startup.bat所在目录中。
         注意：安装版的tomcat会自动设置CATALINA_HOME环境变量 
 ```
@@ -53,11 +57,18 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 |-bin:存放tomcat操作命令。bat是window版本，sh是linux版本。
             startup.bat： 等价于命令窗口中调用catalina.bat start
             shutdown.bat  : catalina.bat stop
-|-conf: 存放tomcat服务器软件的配置文件。server.xml文件是核心配置文件。
+|-conf: 存放tomcat服务器软件的配置文件。
+	- server.xml 核心配置文件
+	- ...
 |-lib：支撑tomcat软件运行的jar包。(因为tomcat本身就是用java开发的)
+	- servlet.jar
+	- jsp.jat
+	- ...
 |-logs:存放日志信息。出现错误可以找该目录
 |-temp:存放临时文件。
 |-webapps： 存放web应用的目录
+	- WEB-INF
+		- web.xml
 |-work：tomcat运行目录。存放jsp页面翻译和编译后的文件。
 ```
 
@@ -66,15 +77,13 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 ```
 |-webapps：存放各种web应用
     |-WebRoot（名称自定义）： 根目录。对应一个web应用。
-        |-静态资源： html+css+javascript+images+xml
+        |-静态资源： html+css+js+images+xml
         |-WEB-INF： 目录
             |-classes： (可选) 目录。存放class字节码
             |-lib： （可选）目录。存放jar包。不能有子目录，全部jar包放在根目录下。
             |-web.xml：web应用的配置文件。
 注意：
-1）不做任何配置的情况下，WEB-INF目录下的文件不能直接通过浏览器访问。在web.xml文件中进行配置，那么WEB-INF目录下的内容就可以被外部访问到！！！
-
-总结：webapps目录中是存放我们做的网站（web应用），每个web应用都用一个目录（webRoot名称自定义）存放，webRoot下可以存放“静态资源”+“WEB-INF",其中WEB-INF目录中的classes目录用来存放class文件，lib目录存放jar包，web.xml文件是配置文件。
+1）不做任何配置的情况下，WEB-INF目录下的文件不能直接通过浏览器访问。在web.xml文件中进行配置后，WEB-INF目录下的内容就可以被外部访问到！！！
 ```
 
 #### 5 web应用部署三种方法
@@ -133,7 +142,7 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 访问：http://hut.eleven.com:8080/bbs/adv.html
 ```
 
-# 3.手动开发动态网页
+# 3.手动开发动态网页(原理)
 
 ```
 动态网页：当用户多次访问该资源时，资源的源代码可能会发生改变的资源。（servlet+jsp）
@@ -141,9 +150,9 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 静态网页：当用户多次访问该资源时，资源的源代码永远不会发送改变的资源。（html+css+javascript）
 ```
 
-Servlet技术： 用java语言开发动态资源的技术。
+Servlet技术： 用java语言开发**动态**资源的技术。
 
-```
+```xml
 1）编写继承HttpServlet的servlet程序。
 2）把servlet交给web服务器软件运行
     2.1 把class字节码文件（包括包）拷贝到web应用的WEB-INF/classes目录下
@@ -196,3 +205,7 @@ web.xml文件代码栗子：
 
 
 
+待补知识：
+
+1. server.xml tomcat核心配置
+2. web.xml 网站核心配置
