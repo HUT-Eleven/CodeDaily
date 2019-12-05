@@ -55,7 +55,7 @@ tomcat的启动步骤：startup.bat-->查找JAVA_HOME环境变量-->查找CATALI
 
 ```
 |-bin:存放tomcat操作命令。bat是window版本，sh是linux版本。
-            startup.bat： 等价于命令窗口中调用catalina.bat start
+            startup.bat： 等价于catalina.bat start
             shutdown.bat  : catalina.bat stop
 |-conf: 存放tomcat服务器软件的配置文件。
 	- server.xml 核心配置文件
@@ -180,27 +180,6 @@ web.xml文件代码栗子：
 		<url-pattern>/hello</url-pattern>
 	</servlet-mapping>
 </web-app>
-```
-
-
-
-# 3.使用工具开发动态网页
-
-```
-1）创建一个web proejct
-2）（可选）在WebRoot下编写静态网页（html+css+javascript）
-3）在src目录下编写servlet动态网页：右键src- > new -> 点击”servlet“。url (可以设为/+类名，比较好记)
-	点击finished之后，生成servlet的代码和web.xml的配置信息
-4）关联tomcat服务器（就是把tomcat所在目录告诉eclipse）
-5）部署项目（就是把eclipse中写的web应用复制到tomcat目录中的webapps目录中）
-6）eclipse中可以直接启动tomcat，浏览器访问测试。
-```
-
-
-
-```
-其他知识：
-4.继承HttpServlet类之后，其中的doget()、dopost()方法可以看做是一个被触发的动作，当浏览发出请求时，请求会被封装成对象（响应也是会被封装成对象）。
 ```
 
 
