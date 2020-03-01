@@ -7,13 +7,9 @@
 
 # 一、随机数
 
-**关键词：一切都是未知数，永远不知道明天会抽什么风**:wind_chime::sweat_smile:
-
 ## 1. 如何生成随机数？
 
 **系统变量**：**==RANDOM==**，默认会产生0~32767的随机整数
-
-**前言：**要想调用变量，不管你是什么变量都要给钱，而且是美元:heavy_dollar_sign:
 
 ~~~powershell
 打印一个随机数
@@ -25,9 +21,6 @@ RANDOM=28325
 产生0~1之间的随机数
 echo $[$RANDOM%2]
 
-产生0~2之间的随机数
-echo $[$RANDOM%3]
-
 产生0~3之间的随机数
 echo $[$RANDOM%4]
 
@@ -36,7 +29,6 @@ echo $[$RANDOM%10]
 
 产生0~100内的随机数
 echo $[$RANDOM%101]
-
 
 产生50-100之内的随机数
 echo $[$RANDOM%51+50]
@@ -111,10 +103,6 @@ do
 	echo "139$n1$n2$n3$n4$n5$n6$n7$n8" >> phonenum.txt
 	let i++
 done
-
-continue:继续，跳过本次循环，执行下一次循环
-break:打断，执行循环体外的代码do..done外
-exit:退出程序
 
 
 #!/bin/bash
@@ -299,12 +287,6 @@ user03:aeBahwien8co
 # 二、嵌套循环
 
 **关键字：大圈套小圈**
-
-:clock3:**时钟**：分针与秒针，秒针转⼀圈（60格），分针转1格。循环嵌套就是外层循环⼀次，内层循环⼀轮。
-
-1. 一个==循环体==内又包含另一个**完整**的循环结构，称为循环的嵌套。
-2. 每次外部循环都会==触发==内部循环，直至内部循环完成，才接着执行下一次的外部循环。
-3. for循环、while循环和until循环可以**相互**嵌套。
 
 ```powershell
 #!/bin/env bash
@@ -567,19 +549,19 @@ echo ${变量名}
 ```powershell
 1）if [ 条件判断 ];then
 		command
-	fi
+   fi
 	
 2) if [ 条件判断 ];then
 		command
 	else
-   	command
+   		command
    fi
    
  3) if [ 条件判断1 ];then
  		command1
- 	 elif [ 条件判断2 ];then
+    elif [ 条件判断2 ];then
  	 	command2
- 	 else
+   else
     	command3
    fi 	
    
