@@ -13,7 +13,7 @@ typora-root-url: ..\pictures
 
 **特别说明：**
 
-1）==[==    ==]== 和==[[==    ==]]==两边都有空格
+1）==[    ] 和[[    ]]两边都有空格==
 
 2）更多判断，`man test`去查看，很多的参数都用来进行条件判断
 
@@ -76,7 +76,7 @@ test -e file					只要文件存在条件为真
 | -ge      | 大于等于 |
 | -le      | 小于等于 |
 
-==注意：还可以用>,<,,>=,<=...来比较==
+==注意：还可以用>,<,,>=,<=，\==...来比较==
 - 数值比较
 
 ```powershell
@@ -85,21 +85,6 @@ $ [ $(id -u) -ne 0 ] && echo "the user is not admin"
 
 # uid=`id -u`
 # test $uid -eq 0 && echo this is admin
-```
-
-- 数值比较
-
-```powershell
-注意：在(( ))中，=表示赋值；==表示判断
-# ((1==2));echo $?
-# ((1<2));echo $?
-# ((2>=1));echo $?
-# ((2!=1));echo $?
-# ((`id -u`==0));echo $?
- 
-# ((a=123));echo $a
-# unset a
-# ((a==123));echo $?
 ```
 
 ### ㈤ ==判断字符串==
@@ -137,37 +122,15 @@ $ [ $(id -u) -ne 0 ] && echo "the user is not admin"
 
 ```powershell
 # a='hello world';b=world
-# [ $a = $b ];echo $?
+
+# [ $a = $b ];echo $?   ----> 会报错
+以下正确
 # [ "$a" = "$b" ];echo $?
 # [ "$a" != "$b" ];echo $?
-
-# [ "$a" == "$b" ];echo $?
 # test "$a" != "$b";echo $?
-
-
-test  表达式
-[ 表达式 ]
-[[ 表达式 ]]
-
+---------------------------
 思考：[ ] 和 [[ ]] 有什么区别？
-
-# a=
-# test -z $a;echo $?
-# a=hello
-# test -z $a;echo $?
-# test -n $a;echo $?
-# test -n "$a";echo $?
-
-# [ '' = $a ];echo $?
--bash: [: : unary operator expected
-2
-# [[ '' = $a ]];echo $?
-0
-
-
-# [ 1 -eq 0 -a 1 -ne 0 ];echo $?
-# [ 1 -eq 0 && 1 -ne 0 ];echo $?
-# [[ 1 -eq 0 && 1 -ne 0 ]];echo $?
+[[]]可以用正则....
 ```
 
 # 二、流程控制语句
@@ -199,6 +162,8 @@ fi
 ```powershell
 [ 条件 ] && command
 ```
+
+注意if后面是有空格的
 
 ### ㈡ ==if...else结构==
 

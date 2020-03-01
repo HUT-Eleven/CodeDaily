@@ -35,20 +35,30 @@ for variable in a b c
 ```powershell
 # for var in {1..10};do echo $var;done
 # for var in 1 2 3 4 5;do echo $var;done
-# for var in `seq 10`;do echo $var;done
 # for var in $(seq 10);do echo $var;done
-# for var in {0..10..2};do echo $var;done
-# for var in {2..10..2};do echo $var;done
-# for var in {10..1};do echo $var;done
+
+# for var in {0..10..2};do echo $var;done #2或-2都表示步长=2
 # for var in {10..1..-2};do echo $var;done
-# for var in `seq 10 -2 1`;do echo $var;done
+# for var in `seq 10 -2 1`;do echo $var;done #-2和2不一样，方向不一样
 ```
 
+- ==continue==：继续；表示==循环体==内下面的代码不执行，重新开始下一次循环
+- ==break==：打断；马上停止执行本次循环，执行==循环体==后面的代码
+- ==exit==：表示直接跳出程序
+
+```shell
+#!/bin/bash
+for i in {1..5}
+do
+	test $i -eq 2 && break || touch /tmp/file$i
+done
+echo hello hahahah
+```
 ### ㈡ ==不带列表循环==
 
 >  不带列表的for循环执行时由**用户指定参数和参数的个数**
 
-- **基本语法格式**
+- 基本语法格式
 
 ```powershell
 for variable
@@ -58,6 +68,9 @@ for variable
         …
    done
 ```
+==其实会默认补全(用bash -x查看)==：
+
+for var ==in $@==
 
 - **举例说明**
 
@@ -65,9 +78,8 @@ for variable
 #!/bin/bash
 for var
 do
-echo $var
+	echo $var
 done
-
 echo "脚本后面有$#个参数"
 ```
 
@@ -82,37 +94,23 @@ for(( expr1;expr2;expr3 ))
 		command
 		…
 	done
-for (( i=1;i<=5;i++))
-	do
-		echo $i
-	done
-
-
-expr1：定义变量并赋初值
-expr2：决定是否进行循环（条件）
-expr3：决定循环变量如何改变，决定循环什么时候退出
 ```
 
 - **举例说明**
 
 ```powershell
+ for (( i=1;i<=5;i++))
+	do
+		echo $i
+	done
+	
  # for ((i=1;i<=5;i++));do echo $i;done
- # for ((i=1;i<=10;i+=2));do echo $i;done
- # for ((i=2;i<=10;i+=2));do echo $i;done
 ```
-
 ## 2. 应用案例
 
 ### ㈠ 脚本==计算==1-100奇数和
 
-#### ① 思路
-
-1. 定义一个变量来保存奇数的和   ==sum===0
-2. 找出1-100的奇数，保存到另一个变量里  ==i===遍历出来的奇数
-3. 从1-100中找出奇数后，再相加，然后将和赋值给变量  循环变量  for
-4. 遍历完毕后，将sum的值打印出来
-
-#### ② 落地实现（条条大路通罗马）
+#### ① 落地实现
 
 ```powershell
 #!/bin/env bash
@@ -122,31 +120,12 @@ sum=0
 
 #for循环遍历1-100的奇数，并且相加，把结果重新赋值给sum
 
-for i in {1..100..2}
+for i in {1..100..2}  或者 for ((i=1;i<=100;i+=2))
 do
-	let sum=$sum+$i
+	let sum=sum+i  或者  sum=$[$i+$sum]
 done
-#打印所有奇数的和
 echo "1-100的奇数和是:$sum"
-
-
-方法1：
-#!/bin/bash
-sum=0
-for i in {1..100..2}
-do
-	sum=$[$i+$sum]
-done
-echo "1-100的奇数和为:$sum"
-
-方法2：
-#!/bin/bash
-sum=0
-for ((i=1;i<=100;i+=2))
-do
-	let sum=$i+$sum
-done
-echo "1-100的奇数和为:$sum"
+---------------------------
 
 方法3：
 #!/bin/bash
@@ -154,54 +133,22 @@ sum=0
 for ((i=1;i<=100;i++))
 do
 	if [ $[$i%2] -ne 0 ];then
-	let sum=$sum+$i
+		let sum=$sum+$i
 	fi
-或者
-test $[$i%2] -ne 0 && let sum=$sum+$i
-
+	或者	test $[$i%2] -ne 0 && let sum=sum+i  #let后面的变量可以不用加$
 done
-echo "1-100的奇数和为:$sum"
-
-方法4：
-sum=0
-for ((i=1;i<=100;i++))
-do
-	if [ $[$i%2] -eq 0 ];then
-	continue
-	else
-	let sum=$sum+$i
-	fi
-done
-echo "1-100的奇数和为:$sum"
+---------------------------
 
 #!/bin/bash
 sum=0
 for ((i=1;i<=100;i++))
 do
-	test $[$i%2] -eq 0 && continue || let sum=sum+$i
+	test $[$i%2] -eq 0 && continue || let sum=sum+i
 done
 echo "1-100的奇数和是:$sum"
 
 ```
 
-#### ③ 循环控制语句
-
-**循环体：** ==do....done==之间的内容
-
-- continue：继续；表示==循环体==内下面的代码不执行，重新开始下一次循环
-- break：打断；马上停止执行本次循环，执行==循环体==后面的代码
-- exit：表示直接跳出程序
-
-```shell
-[root@server ~]# cat for5.sh 
-#!/bin/bash
-for i in {1..5}
-do
-	test $i -eq 2 && break || touch /tmp/file$i
-done
-echo hello hahahah
-
-```
 
 ### ㈡ 判断所输整数是否为质数
 
@@ -377,14 +324,13 @@ done
 real    0m24.129s
 user    0m0.006s
 sys     0m0.005s
-
 ```
 
 **延伸扩展：shell脚本并发**
 
 ```powershell
 并行执行：
-{程序}&表示将程序放到后台并行执行，如果需要等待程序执行完毕再进行下面内容，需要加wait
+{程序}&：表示将程序放到后台并行执行，如果需要等待程序执行完毕再进行下面内容，需要加wait
 
 #!/bin/bash
 #定义变量
@@ -444,8 +390,6 @@ fi
 
 #二、**==while循环语句==**
 
-**特点：**==条件为真就进入循环；条件为假就退出循环==
-
 ##1. while循环语法结构
 
 ~~~powershell
@@ -453,24 +397,11 @@ while 表达式
 	do
 		command...
 	done
-	
-while  [ 1 -eq 1 ] 或者 (( 1 > 2 ))
-  do
-     command
-     command
-     ...
- done
 ~~~
 
 **循环打印1-5数字**
 
 ```powershell
-FOR循环打印：
-for ((i=1;i<=5;i++))
-do
-	echo $i
-done
-
 while循环打印：
 i=1
 while [ $i -le 5 ]
@@ -531,7 +462,7 @@ echo "1-50的偶数和为:$sum"
 # 该脚本用于时间同步
 NTP=10.1.1.1
 count=0
-while true
+while true  # 也可以用：来表示ture
 do
 	ntpdate $NTP &>/dev/null
 	if [ $? -ne 0 ];then
@@ -574,7 +505,7 @@ done
 ## 1. until语法结构
 
 ```shell
-until expression   [ 1 -eq 1 ]  (( 1 >= 1 ))
+until expression  eg: [ 1 -eq 1 ]  (( 1 >= 1 ))
 	do
 		command
 		command

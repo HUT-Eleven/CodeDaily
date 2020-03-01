@@ -1,20 +1,13 @@
 ---
 typora-copy-images-to: pictures
-typora-root-url: pictures
+typora-root-url: ../pictures
 ---
-
-# 本节课程目标
-
-- 了解shell中的通配符
-- 熟悉grep、cut、sort等小工具和shell中的通配符的使用
 
 #一、文本处理工具
 
 ##1. grep工具
 
 grep是==**行过滤**==工具；用于根据关键字进行行过滤
-
-
 
 **语法：**
 
@@ -517,8 +510,8 @@ server
 # echo '$(hostname)'
 $(hostname)
 
-# echo $(date +%F)
-2018-11-22
+# echo $(date +%F' '%T)
+2020-02-29 14:51:15
 # echo `date +%F`
 2018-11-22
 # echo `echo `date +%F``
