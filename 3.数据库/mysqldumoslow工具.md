@@ -1,6 +1,5 @@
 #### 1. 可能会用到的sql：
 ``` sql
-
 show variables like '%slow_query_log%';
 show variables like '%slow_query_log_file%';
 show variables like '%long_query_time%';
@@ -41,3 +40,38 @@ Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@
 - Lock：等待锁的时间
 - Rows：返回客户端行总数和扫描行总数
 ````
+#### 4.常用的mysqldumpslow参数
+
+```shell
+ mysqldumpslow --help  # 查看参数
+ 
+ -s, 是表示按照何种方式排序
+    c: 访问计数
+ 
+    l: 锁定时间
+ 
+    r: 返回记录
+ 
+    t: 查询时间
+ 
+    al:平均锁定时间
+ 
+    ar:平均返回记录数
+ 
+    at:平均查询时间
+ 
+-t, 是top n的意思，即为返回前面多少条的数据；
+-g, 后边可以写一个正则匹配模式，大小写不敏感的；
+
+--------------------------------
+eg:
+得到返回记录集最多的10个SQL。
+mysqldumpslow -s r -t 10 /database/mysql/mysql06_slow.log
+ 
+得到访问次数最多的10个SQL
+mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
+ 
+得到按照时间排序的前10条里面含有左连接的查询语句。
+mysqldumpslow -s t -t 10 -g “left join” /database/mysql/mysql06_slow.log
+```
+
