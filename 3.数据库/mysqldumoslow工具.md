@@ -38,7 +38,7 @@ Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@
 - Count：出现次数,
 - Time：执行最长时间和累计总耗费时间
 - Lock：等待锁的时间
-- Rows：返回客户端行总数和扫描行总数
+- Rows：单次查询返回的平均行数,括号内为累计返回的总行数≈count*单次查询返回的平均行数
 ````
 #### 4.常用的mysqldumpslow参数
 
@@ -61,17 +61,18 @@ Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@
     at:平均查询时间
  
 -t, 是top n的意思，即为返回前面多少条的数据；
--g, 后边可以写一个正则匹配模式，大小写不敏感的；
-
+-g, 后边可以写一个正则匹配模式，大小写不敏感的！！！好用
+-a ,不将数字抽象成N，字符串抽象成S
+-r 反向排序，最大的在最后
 --------------------------------
 eg:
+1.按时间排序，Top 10,包含join。
+mysqldumpslow -s t -t 10 -g "join" /database/mysql/mysql06_slow.log
+
 得到返回记录集最多的10个SQL。
 mysqldumpslow -s r -t 10 /database/mysql/mysql06_slow.log
  
 得到访问次数最多的10个SQL
 mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
- 
-得到按照时间排序的前10条里面含有左连接的查询语句。
-mysqldumpslow -s t -t 10 -g “left join” /database/mysql/mysql06_slow.log
 ```
 

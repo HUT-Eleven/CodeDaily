@@ -1,5 +1,5 @@
 ---
-typora-copy-images-to: pictures
+	typora-copy-images-to: pictures
 typora-root-url: ..\pictures
 ---
 
