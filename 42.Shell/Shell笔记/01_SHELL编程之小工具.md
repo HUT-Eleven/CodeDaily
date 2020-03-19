@@ -130,19 +130,19 @@ cut -d: -f2 /etc/inittab |tail -1
 
 ## 3. sort工具
 
-> sort工具用于排序;它将文件的每一行作为一个单位，从首字符向后，依次按ASCII码值进行比较，最后将他们按升序输出。
-
-#### 语法和选项
+> 文件内容排序，
+> 注：不改变源文件;默认按ASCII码比较。
 
 ```powershell
--u ：去除重复行
--r ：降序排列，默认是升序
--o : 将排序结果输出到文件中,类似重定向符号>
--n ：以数字排序，默认是按字符排序
+-u ：unique,去除重复行
+-r ：reverse,降序排列，默认是升序
+-o : output,将排序结果输出到文件中,类似重定向符号>
+-n ：number,以数字排序，默认是按字符排序
 -t ：分隔符
--k ：第N列
+-k ：第N列， -t' ' -k 1  以空格分隔，取第一列
 -b ：忽略前导空格。
 -R ：随机排序，每次运行的结果均不同
+-f ：igonre case
 ```
 
 **举例说明**
@@ -162,13 +162,13 @@ cut -d: -f2 /etc/inittab |tail -1
 
 ##4.uniq工具
 
-> uniq用于去除****连续****的****重复****行
+> uniq用于**搜索文件连续重复行**
 
 ~~~powershell
 常见选项：
--i: 忽略大小写
+-i: ignore case
 -c: 统计重复行次数
--d:只显示重复行
+-d: 只显示重复行
 
 举例说明：
 # uniq 2.txt 
@@ -178,59 +178,52 @@ cut -d: -f2 /etc/inittab |tail -1
 
 ## 5.tee工具
 
-> tee工具是从标准输入读取并写入到标准输出和文件，即：双向覆盖重定向（屏幕输出|文本输入）
+> 双向覆盖重定向（屏幕输出|文本输入）
 
 ~~~powershell
 选项：
--a 双向追加重定向
+-a append追加
 
-# echo hello world
 # echo hello world|tee file1
-# cat file1 
 # echo 999|tee -a file1
-# cat file1 
 ~~~
 
 ## 6.diff工具
 
-> diff工具用于逐行比较文件的不同
+> diff工具用于逐行比较文件的不同,也可用于对比目录下文件差异
 
-注意：diff描述两个文件不同的方式是告诉我们**怎样改变第一个**文件之后==与第二个文件匹配==。
-
-### 语法和选项
+注意：diff的描述是告诉我们**怎样改变第一个**文件成为==与第二个文件匹配==。
 
 **语法：**
 
 ```powershell
-diff [选项] 文件1 文件2
+diff [选项] srcFile targetFile
 ```
 
-**常用选项：**
-
-| 选项     | 含义               | 备注 |
-| -------- | ------------------ | ---- |
-| -b       | 不检查空格         |      |
-| -B       | 不检查空白行       |      |
-| -i       | 不检查大小写       |      |
-| -w       | 忽略所有的空格     |      |
-| --normal | 正常格式显示(默认) |      |
-| -c       | 上下文格式显示     |      |
-| -u       | 合并格式显示       |      |
+| 选项   | 含义                               |
+| ------ | ---------------------------------- |
+| -b     | 不检查空格                         |
+| -B     | 不检查空白行                       |
+| -i     | 不检查大小写                       |
+| -w     | 忽略所有的空格                     |
+| ==-c== | 上下文格式显示                     |
+| ==-u== | 合并格式显示                       |
+| ==-q== | 对比目录下文件区别，不对比文件内容 |
 
 **举例说明：**
 
-- 比较两个**普通文件**异同，文件准备：
+- 文件准备：
 
 ```powershell
-[root@MissHou ~]# cat file1
+# vim file1
 aaaa
 111
 hello world
 222
 333
 bbb
-[root@MissHou ~]#
-[root@MissHou ~]# cat file2
+#
+# vim file2
 aaa
 hello
 111
@@ -244,7 +237,7 @@ world
 
 ```powershell
 diff目的：file1如何改变才能和file2匹配
-[root@MissHou ~]# diff file1 file2
+# diff file1 file2
 1c1,2					第一个文件的第1行需要改变(c=change)才能和第二个文件的第1到2行匹配			
 < aaaa				小于号"<"表示左边文件(file1)文件内容
 ---					---表示分隔符
@@ -259,10 +252,10 @@ diff目的：file1如何改变才能和file2匹配
 > world
 ```
 
-2）上下文格式显示
+2）上下文格式显示（推荐）
 
 ```powershell
-[root@MissHou ~]# diff -c file1 file2
+# diff -c file1 file2
 前两行主要列出需要比较的文件名和文件的时间戳；文件名前面的符号***表示file1，---表示file2
 *** file1       2019-04-16 16:26:05.748650262 +0800
 --- file2       2019-04-16 16:26:30.470646030 +0800
@@ -285,10 +278,10 @@ diff目的：file1如何改变才能和file2匹配
 
 ```
 
-3）合并格式显示
+3）合并格式显示（推荐）
 
 ```powershell
-[root@MissHou ~]# diff -u file1 file2
+# diff -u file1 file2
 前两行主要列出需要比较的文件名和文件的时间戳；文件名前面的符号---表示file1，+++表示file2
 --- file1       2019-04-16 16:26:05.748650262 +0800
 +++ file2       2019-04-16 16:26:30.470646030 +0800
@@ -309,14 +302,14 @@ diff目的：file1如何改变才能和file2匹配
 
 ```powershell
 默认情况下也会比较两个目录里相同文件的内容
-[root@MissHou  tmp]# diff dir1 dir2
+# diff dir1 dir2
 diff dir1/file1 dir2/file1
 0a1
 > hello
 Only in dir1: file3
 Only in dir2: test1
 如果只需要比较两个目录里文件的不同，不需要进一步比较文件内容，需要加-q选项
-[root@MissHou  tmp]# diff -q dir1 dir2
+# diff -q dir1 dir2
 Files dir1/file1 and dir2/file1 differ
 Only in dir1: file3
 Only in dir2: test1
@@ -329,38 +322,35 @@ Only in dir2: test1
 
 ```powershell
 1）先找出文件不同，然后输出到一个文件
-[root@MissHou ~]# diff -uN file1 file2 > file.patch
+# diff -uN file1 file2 > file.patch
 -u:上下文模式
--N:将不存在的文件当作空文件
+-N:将不存在的文件当作空文件(可不用)
 2）将不同内容打补丁到文件
-[root@MissHou ~]# patch file1 file.patch
+# patch file1 file.patch
 patching file file1
 3）测试验证
-[root@MissHou ~]# diff file1 file2
-[root@MissHou ~]#
-
+# diff file1 file2
 ```
 
 ## 7. paste工具
 
-> paste工具用于合并文件行
+> 用于逐行合并文件
 
 ~~~powershell
 常用选项：
 -d：自定义间隔符，默认是tab
--s：串行处理，非并行
+-s：横行处理，非并行
 ~~~
 
 ##8. tr工具
 
->  tr用于字符转换，替换和删除；主要用于**删除文件中控制字符**或进行**字符转换**
-
-### 语法和选项
+>  用于文件搜索后替换和删除，
+>  注意：不会修改源文件
 
 **语法：**
 
 ```powershell
-用法1：命令的执行结果交给tr处理，其中string1用于查询，string2用于转换处理
+用法1：命令的执行结果交给tr处理，其中string1用于查询，string2用于替换
 # commands|tr  'string1'  'string2'
 用法2：tr处理的内容来自文件，记住要使用"<"标准输入
 # tr  'string1'  'string2' < filename
@@ -372,7 +362,7 @@ patching file file1
 **常用选项：**
 
 ```powershell
--d 删除字符串1中所有输入字符。
+-d 删除匹配字符串。
 -s 删除所有重复出现字符序列，只保留第一个；即将重复出现字符串压缩为一个字符串
 ```
 
@@ -396,7 +386,7 @@ patching file file1
 **举例说明：**
 
 ~~~powershell
-[root@MissHou  shell01]# cat 3.txt 	自己创建该文件用于测试
+# cat 3.txt 	自己创建该文件用于测试
 ROOT:x:0:0:root:/root:/bin/bash
 bin:x:1:1:bin:/bin:/sbin/nologin
 daemon:x:2:2:daemon:/sbin:/sbin/nologin
@@ -425,14 +415,14 @@ hello world 888
 # tr '[0-9]' '@' < 3.txt 			将文件中的数字替换为@符号
 # tr '[a-z]' '[A-Z]' < 3.txt 		将文件中的小写字母替换成大写字母
 # tr -s '[a-z]' < 3.txt 			匹配小写字母并将重复的压缩为一个
-# tr -s '[a-z0-9]' < 3.txt 		匹配小写字母和数字并将重复的压缩为一个
+# tr -s '[a-z0-9]' < 3.txt 			匹配小写字母和数字并将重复的压缩为一个
 # tr -d '[:digit:]' < 3.txt 		删除文件中的数字
 # tr -d '[:blank:]' < 3.txt 		删除水平空白
 # tr -d '[:space:]' < 3.txt 		删除所有水平和垂直空白
 
 ~~~
 
-#### 小试牛刀
+## 练习
 
 1. 使用小工具分别截取当前主机IP；截取NETMASK；截取广播地址；截取MAC地址
 
