@@ -11,3 +11,13 @@ Fiddler使用不难，注重实战，应多了解其使用场景：
    - 模拟网络中断，一直不让断点通过
 6. bpu 局部断点
 6. 各种插件安装：willow
+
+
+
+Statistic界面：查看各过程时间：
+
+https://blog.csdn.net/qq_33250158/article/details/99640810
+
+其中：dns lookup：域名解析
+
+![image-20200320112549240](assets/image-20200320112549240.png)
