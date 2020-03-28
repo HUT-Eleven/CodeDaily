@@ -23,6 +23,8 @@ SELECT * FROM information_schema.STATISTICS WHERE table_schema='cbs_uat_cug2';
 # Query_time（查询时间）: 1.896889  Lock_time（等待锁的时间）: 0.000823 Rows_sent(返回客户端行总数): 100000  Rows_examined(扫描行总数): 200000
 SET timestamp=1496472507; 
 select * from z_order limit 100000;
+
+注：DML语句也会记录到日志中
 ```
 ---
 
@@ -38,7 +40,7 @@ Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@
 - Count：出现次数,
 - Time：执行最长时间和累计总耗费时间
 - Lock：等待锁的时间
-- Rows：单次查询返回的平均行数,括号内为累计返回的总行数≈count*单次查询返回的平均行数
+- Rows：单次查询返回的平均行数(累计返回的总行数≈count*单次查询返回的平均行数)
 ````
 #### 4.常用的mysqldumpslow参数
 
@@ -52,7 +54,7 @@ Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@
  
     r: 返回记录
  
-    t: 查询时间
+    t: 总查询时间，（即所有这句sql的总和时间，即Time=1.05s (200s)总的200s）
  
     al:平均锁定时间
  

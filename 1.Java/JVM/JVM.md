@@ -1,9 +1,11 @@
 ---
-typora-copy-images-to: ../assets
+	typora-copy-images-to: ../assets
 typora-root-url: ../assets
 ---
 
-==JVM总览图==：![Snipaste_2020-03-21_17-18-04](/Snipaste_2020-03-21_17-18-04.png)
+### ==JVM总览图==
+
+![Snipaste_2020-03-21_17-18-04](/Snipaste_2020-03-21_17-18-04.png)
 
 真正需要熟悉的部分是：==堆==。其余部分需了解，以串联知识面。
 
@@ -77,25 +79,6 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 <img src="/image-20200322004018090.png" alt="image-20200322004018090" style="zoom: 50%;" />
 
 ---
-
-### 方法区
-
-> 方法区可以理解为一个放模板的地方，是共享的。
-
-1. 存储每个类的结构信息（字节码形式），包括：==常量池==、字段、构造函数、普通函数等等
-
-2. ==线程共享==
-
-3. ==方法区=规范==，不同的JVM有不同的实现：HotSpot是永久代（PermGen），JRockit是元空间（Metaspace）。==jdk8开始，HotSpot用MetaSpace取代了PermGen==。
-
-   ==!!!元空间与永久代最大的区别：==
-   永久代用的是JVM的堆内存；
-   元空间直接用本地物理内存，所以元空间的数据不再占用堆内存，原本在永久代中的==字符串常量池、静态常量==移到==堆==中
-
-4. 方法区不涉及垃圾回收
-
----
-
 ### Java栈
 
 > 以下“栈”都为Java栈，不包含本地方法栈
@@ -110,18 +93,37 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 <img src="/image-20200322122359477.png" alt="image-20200322122359477" style="zoom: 50%;" />
 
 ---
+### 方法区
+
+> 方法区可以理解为一个放模板的地方，是共享的。
+
+1. 存储每个类的结构信息（字节码形式），包括：==常量池(已移除)==、字段、构造函数、普通函数等等
+
+2. ==线程共享==
+
+3. ==方法区=规范==，不同的JVM有不同的实现：HotSpot是永久代（PermGen），JRockit是元空间（Metaspace）。==jdk8开始，HotSpot用MetaSpace取代了PermGen==。
+
+   ==!!!元空间与永久代最大的区别：==
+   永久代用的是JVM的堆内存；
+   元空间直接用本地物理内存，所以元空间的数据不再占用堆内存，原本在永久代中的==字符串常量池、静态常量==移到==堆==中
+
+4. 方法区不涉及垃圾回收
+
+---
+
+
 
 ### Heap
 
 1. 堆：存放==对象实例==的内存区域
-2. 堆是jvm中占用内存最大的，所谓垃圾回收，即堆的垃圾回收，而JVM的其他部分其实不涉及垃圾回收。
-3. 线程共享
-4. 
+2. 堆是jvm中占用内存最大的，所谓垃圾回收，主要就是堆的垃圾回收，而JVM的其他部分不涉及垃圾回收。
+3. ==线程共享==
+4. 减少频繁GC的目的：==GC操作会暂停所有的应用程序线程==，而FGC耗时又长，如果系统频繁FGC,则可能导致系统出现故障（超时、卡顿、OOM等）
 
 #### 一、堆内存划分
 
 **==堆大小 = 新生代 + 老年代 = （Eden + S0 + S1）+ 老年代==**
-两个比例：8：1：1；  1：2 其中新生代有效内存只有90%
+两个比例：8：1：1；  1：2。其中新生代有效内存只有90%
 
 <img src="/image-20200322164609247.png" alt="image-20200322164609247" style="zoom: 60%;" />
 
@@ -134,17 +136,23 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 <img src="/image-20200322175033946.png" alt="image-20200322175033946" style="zoom: 50%;" />
 
 具体如下：
-YGC开始---> Eden区清理存活下来的对象被==复制==到Survivor To 区；From区清理存活下来的对象的根据==年龄阈值==（-XX:MaxTenuringThreshold）决定复制去Old区还是To区，==年龄+1==；
+YGC开始---> Eden区清理存活下来的对象被==复制==到Survivor To 区；From区清理存活下来的对象的根据年龄阈值（-XX:MaxTenuringThreshold）决定复制去Old区还是To区，年龄+1；
 YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，所以To区一直是空的。也即==YGC之后有交换，谁空谁是To==。
-对于一些较大的对象 ( 即需要分配一块较大的连续内存空间 ) 则是直接进入到老年代
+==注：==对于一些==较大的对象== ( 即需要分配一块较大的连续内存空间 ) 则是直接进入到老年代
 
 #### 三、FGC
 
-1. FGC也称==MajorGC==，是==新生代+老年代==的垃圾收集动作
-2. 老年代的垃圾回收算法是==标记-清除算法==，节约了空间，但标记过程耗时，且回收会产生内存碎片。
+1. ==触发FGC的可能==：
+   - system.gc()，一般生产上会禁止。
+   - 出现大对象，直接进入老年区，导致老年区空间不足：
+     - 比如日志级别过低，导致日志对象很大，频繁FGC，FGC时间长（秒级别以上）。可以适当调高日志级别
+     - mysql一次性查询出太多数据，（mysql查询出的数据会用对象装载），同样也会造成大对象直接进入老年区，进而触发FGC。
+2. FGC也称==MajorGC==，是==新生代+老年代==的垃圾收集动作
+3. 清空新生代,新生代中存活下来的直接进入老年代。
+4. 老年代的垃圾回收算法是==标记-清除算法==，节约了空间，但标记过程耗时，且回收会产生内存碎片。
    <img src="/image-20200322233835256.png" alt="image-20200322233835256" style="zoom:50%;" />
-3. FGC之后依然是满的，则出现OOM:==java.lang.OutOfMemoryError:Java heap space==
-4. FGC的频率低，但时间长
+5. FGC之后依然是满的，则出现OOM:==java.lang.OutOfMemoryError:Java heap space==
+6. FGC的频率低，但时间长
 
 #### 四、四种垃圾回收算法
 
@@ -167,7 +175,7 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 ##1.基本配置##
 -server			# 默认-client,两者有细微区别，生产用-server
 -Xms2048m		# 初始堆内存
--Xmx2048m		# 最大堆内存。一般和Xms配置成一样以避免JVM多次重新分配内存！
+-Xmx2048m		# 最大堆内存。一般和Xms配置成一样以避免JVM多次重新分配内存产生额外的GC时间！
 -XX:MetaspaceSize=256m		# 元空间初始内存
 -XX:MaxMetaspaceSize=512m	# 元空间最大内存
 -XX:+UseFastAccessorMethods	# 原始类型的快速优化
@@ -176,7 +184,7 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 -XX:+ExplicitGCInvokesConcurrent
 -XX:ParallelGCThreads=8		# 并行收集器的线程数
 -XX:-UseAdaptiveSizePolicy	#自动选择年轻代区大小和相应的Survivor区比例，使用并行收集器时建打开
--Xmn1024m					#新生代的大小
+-Xmn1024m					#新生代的大小，这样新生代就占了堆的1/2
 -XX:SurvivorRatio=6			#Eden:Survivor from: Survivor To=6:1:1
 
 ##2.CMS相关参数##
@@ -191,10 +199,11 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 -XX:+PrintGCTimeStamps	#输出时间戳
 -XX:+PrintGCDateStamps	#输出日期+时间，可读性比PrintGCTimeStamps更好
 -XX:+HeapDumpOnOutOfMemoryError	#OOM时，dump出内存快照，可用于分析
+-XX:HeapDumpPath=/tmp/heapdump.hprof #指定导出堆信息时的路径或文件名，结合上一条使用，未指定路径，则在根目录下
 -XX:+PrintGCDetails		#打印GC信息
 -Xloggc:/home/smemvp1/CBS/app/log/onl/gc.log	#gc日志位置
 
-##4.利用-D配置log4j、系统信息等等##
+##4.利用-D配置其他信息，如log4j、系统信息等等##
 -Dlog4j2.is.webapp=false
 -Dlog4j2.enable.threadlocals=true
 -DenableLog=true
@@ -248,8 +257,96 @@ cn.sunline.edsp.microcore.boot.Bootstrap start
    新生代显示的38400k ≈ 8/10 Eden + 1/10 Suvivor From(有误差), 即Xmn的90%才为**新生代可用的内存空间**，。
 3. Full GC中最后一条的PSPermGen是指永久代，jdk8开始为==Metaspace==，其余一样。但是可以看出GC前后，元空间的内存使用情况不变，所以方法区是不涉及垃圾回收的。
 4. Full GC耗时是MinorGC耗时的62倍！！！通常都是在10倍以上。
-5. 观察发现，Full GC会讲新生代清空（600k—>0k），存活下的直接进入老年代.老年代（0—>470k），也就是这次新生代回收是从600k-->400k直接进入老年代
+5. 观察发现，Full GC会清空新生代（600k—>0k），存活下的470k直接进入老年代.老年代（0—>470k）
+
+
+
+### JVM工具
+
+#### ==1. jps==
+
+作用：==查看虚拟机的进程==（有权访问）,与linux上的ps类似
+
+格式：jps [options] [hostid]  # 默认localhost
+
+```sh
+jps -l # list出当前虚拟机所有进程号+启动类全名
+```
+
+![image-20200327133552991](/image-20200327133552991.png)
+
+```sh
+jps -v # 输出传入JVM的参数
+```
+
+![image-20200327133607470](/image-20200327133607470.png)
+
+#### 2. jinfo
+
+作用：查看虚拟机运行参数
+
+#### ==3. jstat==
+
+作用：==statistics，统计工具==，监视jvm内存内的各种堆和非堆的大小及其内存使用量
+
+格式：jstat [options] [pid] [间隔时间/毫秒] [查询次数]
+
+```sh
+options:
+	-gcutil:gc情况统计
+	-class :类加载统计
+	-compiler:编译统计
+```
+
+#### ==4. jstack==
+
+作用：生成线程快照信息
+
+```sh
+-l	#打印关于锁的附加信息
+-m	#同时打印出native stack信息
+```
+
+打印出的文件中，线程一般存在如下几种状态：
+
+```sh
+1. 执行中，Runnable (正常)
+2. 死锁，Deadlock（重点关注） 
+3. 阻塞，Blocked（重点关注）    
+4. 等待资源，Waiting on condition（重点关注） 
+5. 等待获取监视器，Waiting on monitor entry（重点关注）
+6. 暂停，Suspended
+7. 对象等待中，Object.wait() 或 TIMED_WAITING
+8. 停止，Parked
+```
+
+#### ==5. jmap==
+
+格式：jmap [options] [pid] 
+
+```sh
+# 1. dump : 生成堆转储快照
+jmap -dump:live,format=b,file=dump.hprof PID
+注：-XX:+HeapDumpOnOutOfMemoryError可在OOM时自动生成dump文件
+
+# 2. -finalizerinfo：打印等待回收对象的信息
+# 3. -heap:堆的使用情况
+# 4. -histo：堆中对象统计，生产环境慎用，live只统计活的。
+jmap -histo:live PID>temp.txt
+```
+
+#### 6. jhat
+
+JVM Heap Analysis Tool，建议使用MAT
+
+#### 7. jconsole
+
+监控平台
 
 
 
 ### JMM
+
+### MAT
+
+### Arthas
