@@ -5,7 +5,7 @@ typora-root-url: ../pictures
 
 #一、文本处理工具
 
-##1. grep工具
+##==1. grep工具==
 
 grep是==**行过滤**==工具；用于根据关键字进行行过滤
 
@@ -59,8 +59,6 @@ source ~/.bashrc
 
 **举例说明：**
 
-**说明：不要直接使用/etc/passwd文件，将其拷贝到/tmp下做实验！**
-
 ```powershell
 # grep -i root passwd						忽略大小写匹配包含root的行
 # grep -v root passwd						匹配不包含root的行
@@ -77,7 +75,7 @@ source ~/.bashrc
 # grep -C 5 mail passwd 					匹配包含mail关键字及其前后5行
 ```
 
-##2. cut工具
+##==2. cut工具==
 
 cut是==**列截取**==工具，用于列的截取
 
@@ -128,7 +126,7 @@ cut -d: -f2 /etc/inittab |tail -1
 
 
 
-## 3. sort工具
+## ==3. sort工具==
 
 > 文件内容排序，
 > 注：不改变源文件;默认按ASCII码比较。
@@ -162,7 +160,7 @@ cut -d: -f2 /etc/inittab |tail -1
 
 ##4.uniq工具
 
-> uniq用于**搜索文件连续重复行**
+> uniq用于**去除文件连续重复行，不修改源文件**
 
 ~~~powershell
 常见选项：
@@ -176,7 +174,7 @@ cut -d: -f2 /etc/inittab |tail -1
 # uniq -dc 2.txt 
 ~~~
 
-## 5.tee工具
+## ==5.tee工具==
 
 > 双向覆盖重定向（屏幕输出|文本输入）
 
@@ -188,7 +186,7 @@ cut -d: -f2 /etc/inittab |tail -1
 # echo 999|tee -a file1
 ~~~
 
-## 6.diff工具
+## ==6.diff工具==
 
 > diff工具用于逐行比较文件的不同,也可用于对比目录下文件差异
 
@@ -483,8 +481,6 @@ hello world 888
 [list]:	匹配[list]中的任意单个字符,或者一组单个字符   [a-z]
 [!list]: 反向选择
 {string1,string2,...}：匹配string1,string2或更多字符串
-
-# touch file{1..5}
 ~~~
 
 ##==4、bash中的引号（重点）==

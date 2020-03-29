@@ -1,5 +1,6 @@
 ---
-typora-root-url: pictures
+typora-copy-images-to: ../pictures
+typora-root-url: ..\pictures
 ---
 
 #课程目标

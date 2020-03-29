@@ -1,15 +1,15 @@
 ---
-	typora-copy-images-to: pictures
+typora-copy-images-to: ..\pictures
 typora-root-url: ..\pictures
 ---
 
-# 一、条件判断语法结构
+# 一、条件判断语句
 
-##1. ==条件判断语法格式==
+##1. 语法格式
 
 - 格式1： ==**test**== 条件表达式
 - 格式2： **[** 条件表达式 ]   
-- 格式3： **[[** 条件表达式 ]] 
+- 格式3： **[[** 条件表达式 ]] ,区别：可以用正则....
 
 **特别说明：**
 
@@ -19,16 +19,16 @@ typora-root-url: ..\pictures
 
 3）[] 和[[]]特殊：**非空返回** **true**，如：[ '' ]返回false,[ !  '' ]返回ture
 
-## 2. 条件判断相关参数
+## 2. 相关参数
 
 ==以下所有都可以用`man test`辅助记忆==
 
-### ㈠ ==判断文件类型==
+### ㈠ ==判断文件==
 
 | 判断参数 | 含义                                         |
 | -------- | -------------------------------------------- |
 | ==-e==   | 判断文件是否存在（任何类型文件）             |
-| -f       | 判断文件是否存在==并且==是一个普通文件       |
+| ==-f==   | 判断文件是否存在==并且==是一个file           |
 | -d       | 判断文件是否存在并且是一个目录               |
 | -L       | 判断文件是否存在并且是一个软连接文件         |
 | -b       | 判断文件是否存在并且是一个块设备文件         |
@@ -69,16 +69,16 @@ test -e file					只要文件存在条件为真
 
 ### ㈣ ==判断整数==
 
-| 判断参数 | 含义     |
-| -------- | -------- |
-| -eq      | 相等     |
-| -ne      | 不等     |
-| -gt      | 大于     |
-| -lt      | 小于     |
-| -ge      | 大于等于 |
-| -le      | 小于等于 |
+| 判断参数 | 含义              |
+| -------- | ----------------- |
+| -eq      | equals,相等       |
+| -ne      | not equals,不等   |
+| -gt      | greater than,大于 |
+| -lt      | less than,小于    |
+| -ge      | 大于等于          |
+| -le      | 小于等于          |
 
-==注意：还可以用>,<,,>=,<=，\==...来比较==
+
 - 数值比较
 
 ```powershell
@@ -91,53 +91,39 @@ $ [ $(id -u) -ne 0 ] && echo "the user is not admin"
 
 ### ㈤ ==判断字符串==
 
-| 判断参数           | 含义                                            |
-| ------------------ | ----------------------------------------------- |
-| -z                 | 判断是否为==空==字符串，字符串长度为0则成立     |
-| -n                 | 判断是否为==非空==字符串，字符串长度不为0则成立 |
-| string1 = string2  | 判断字符串是否相等, ==等号两边需空格==          |
-| string1 != string2 | 判断字符串是否相不等                            |
+比较字符串时，最好用双引号框起来
 
+| 判断参数                                   | 含义                                                      |
+| ------------------------------------------ | --------------------------------------------------------- |
+| -z                                         | zero,判断是否为==空==字符串，字符串长度为0则成立          |
+| -n                                         | not null ,判断是否为==非空==字符串，字符串长度不为0则成立 |
+| string1 = string2  或者 string1 == string2 | 判断字符串是否相等, ==等号两边需空格==                    |
+| string1 != string2                         | 判断字符串是否相不等                                      |
+注意:
+
+```powershell
+# a='hello world';b=world
+# [ $a = $b ];echo $?   ----> 会报错
+以下正确
+# [ "$a" = "$b" ];echo $?
+```
 ### ㈥ ==&&  ||==
+
+==shell中&&和||没有优先级之分，从左往右依次看==
 
 | 判断符号   | 含义   | 举例                                                         |
 | ---------- | ------ | ------------------------------------------------------------ |
 | -a 和 &&   | 逻辑与 | \[ 1 -eq 1 -a 1 -ne 0 ]         [ 1 -eq 1 ] && [ 1 -ne 0 ]   |
 | -o 和 \|\| | 逻辑或 | \[ 1 -eq 1 -o 1 -ne 1 ]         [ 1 -eq 1 ] \|\| [ 1 -ne 1 ] |
 
-**==特别说明：==**
-
 &&	前面的表达式==为真==，才会执行后面的代码
 
 ||	 前面的表达式==为假==，才会执行后面的代码
 
-;        ==只==用于==分割==命令或表达式
 
-==shell中&&和||没有优先级之分，从左往右依次看==
+# 二、if语句
 
-**① 举例说明**
-
-
-- 字符串比较
-
-  ==注意：双引号引起来，看作一个整体；= 和 == 在 [ 字符串 ] 比较中都表示判断==
-
-```powershell
-# a='hello world';b=world
-
-# [ $a = $b ];echo $?   ----> 会报错
-以下正确
-# [ "$a" = "$b" ];echo $?
-# [ "$a" != "$b" ];echo $?
-# test "$a" != "$b";echo $?
----------------------------
-思考：[ ] 和 [[ ]] 有什么区别？
-[[]]可以用正则....
-```
-
-# 二、流程控制语句
-
-## 1. 基本语法结构
+## 1. 语法格式
 
 ### ㈠ ==if结构==
 
@@ -194,41 +180,18 @@ if [ "$str" = 'hello' ];then
  else
     echo '请输入hello!'
 fi
-
-  1 #!/bin/env bash
-  2
-  3 read -p "请输入一个字符串:" str
-  4 if [ "$str" = "hello" ]
-  5 then
-  6     echo world
-  7 else
-  8     echo "请输入hello!"
-  9 fi
-
-#!/bin/env bash
-
-A=hello
-B=world
-C=hello
-
-if [ "$1" = "$A" ];then
-        echo "$B"
-    else
-        echo "$C"
-fi
-
-
-read -p '请输入一个字符串:' str;
- [ "$str" = 'hello' ] && echo 'world' ||  echo '请输入hello!'
+或者：
+read -p '请输入一个字符串:' str
+[ "$str" = 'hello' ] && echo 'world' ||  echo '请输入hello!'
 ```
 
 ### ㈢ ==if...elif...else结构==
 
 ```powershell
 if [ condition1 ];then
-		command1  	结束
+		command1  	
 	elif [ condition2 ];then
-		command2   	结束
+		command2   	
 	else
 		command3
 fi
@@ -263,7 +226,7 @@ read -p "请输入你要ping的主机的IP:" ip
 
 # 使用ping程序判断主机是否互通
 ping -c1 $ip &>/dev/null
-#&>/dev/null：表示输出的结果不要了，直接扔到null中
+&>：可以将错误信息或者普通信息都重定向输出  等价于  1 > a.txt 2>&1	
 if [ $? -eq 0 ];then
 	echo "当前主机和远程主机$ip是互通的"
  else
@@ -272,7 +235,6 @@ fi
 
 逻辑运算符
 test $? -eq 0 &&  echo "当前主机和远程主机$ip是互通的" || echo "当前主机和远程主机$ip不通的"
-
 ```
 
 ### ㈡ 判断一个进程是否存在
@@ -377,14 +339,6 @@ else
 fi
 ```
 
-### ㈡ 判断软件包是否安装
-
-**需求2：**用脚本判断一个软件包是否安装，如果没安装则安装它（假设本地yum已配合）
-
-```powershell
-
-```
-
 ### ㈢ 判断当前主机的内核版本
 
 **需求3：**判断当前内核主版本是否为2，且次版本是否大于等于6；如果都满足则输出当前内核版本
@@ -413,4 +367,212 @@ test ${kernel:0:1} -eq 2 -a ${kernel:2:1} -ge 6 && echo $kernel || echo '不符�
 其他命令参考：
 uname -r|grep ^2.[6-9] || echo '不符合要求'
 ```
+
+# 一、case语句
+
+===java的switch==
+
+## 1. 语法结构
+
+~~~powershell
+case var in             定义变量;var代表是变量名
+v1|v2|v3)               用 | 分割多个模式，相当于or
+    command1            需要执行的语句
+    ;;                  两个分号代表命令结束
+v4)
+    command2
+    ;;
+v5|v6)
+    command3
+    ;;
+*)            不满足以上模式，默认执行*)下面的语句
+    command4
+    ;;
+esac					esac表示case语句结束
+~~~
+
+## 2. 案例
+
+### ㈠ 脚本传不同值做不同事
+
+**具体需求：**当给程序传入start、stop、restart三个不同参数时分别执行相应命令
+
+~~~powershell
+#!/bin/env bash  这样看比较舒服
+case $1 in
+	start|S)
+        service apache start &>/dev/null && echo "apache 启动成功";;
+	stop|T)
+        service apache stop &>/dev/null && echo "apache 停止成功";;
+    restart|R)
+        service apache restart &>/dev/null && echo "apache 重启完毕";;
+    *)
+        echo "请输入要做的事情...";;
+esac
+~~~
+
+### ㈡ 根据用户需求选择做事
+
+**具体需求：**
+
+脚本提示让用户输入需要管理的服务名，然后提示用户需要对服务做什么操作，如启动，关闭等操作
+
+```powershell
+#!/bin/env bash
+read -p "请输入你要管理的服务名称(vsftpd):" service
+case $service in
+	vsftpd|ftp)
+        read -p "请选择你需要做的事情(restart|stop):" action
+        case $action in
+			stop|S)
+			    service vsftpd stop &>/dev/null && echo "该$serivce服务已经停止成功"
+                ;;
+            start)
+                service vsftpd start &>/dev/null && echo "该$serivce服务已经成功启动"
+                ;;
+        esac
+        ;;
+    httpd|apache)
+        echo "apache hello world"
+        ;;
+    *)
+    	echo "请输入你要管理的服务名称(vsftpd)"
+        ;;
+esac
+```
+
+###㈢ 菜单提示让用户选择需要做的事
+
+**具体需求：**
+
+模拟一个多任务维护界面;当执行程序时先显示总菜单，然后进行选择后做相应维护监控操作
+
+```powershell
+**********请选择*********
+h	显示命令帮助
+f	显示磁盘分区
+d	显示磁盘挂载
+m	查看内存使用
+u	查看系统负载
+q	退出程序
+*************************
+```
+
+**思路：**
+
+1. 菜单打印出来
+2. 交互式让用户输入操作编号，然后做出相应处理
+
+**落地实现：**
+
+1. 菜单打印(分解动作)
+
+```powershell
+#!/bin/env bash
+cat <<-EOF
+	h	显示命令帮助
+	f	显示磁盘分区
+	d	显示磁盘挂载
+	m	查看内存使用
+	u	查看系统负载
+	q	退出程序
+	EOF
+```
+
+2. 最终实现
+
+~~~powershell
+#!/bin/bash
+#打印菜单
+cat <<-EOF
+	h	显示命令帮助
+	f	显示磁盘分区
+	d	显示磁盘挂载
+	m	查看内存使用
+	u	查看系统负载
+	q	退出程序
+	EOF
+
+#让用户输入需要的操作
+while true
+do
+read -p "请输入需要操作的选项[f|d]:" var1
+case $var1 in
+	h)
+	cat <<-EOF
+        h       显示命令帮助
+        f       显示磁盘分区
+        d       显示磁盘挂载
+        m       查看内存使用
+        u       查看系统负载
+        q       退出程序
+	EOF
+	;;
+	f)
+	fdisk -l
+	;;
+	d)
+	df -h
+	;;
+	m)
+	free -m
+	;;
+	u)
+	uptime
+	;;
+	q)
+	exit
+	;;
+esac
+done
+
+
+
+#!/bin/bash
+#打印菜单
+menu(){
+cat <<-END
+	h	显示命令帮助
+	f	显示磁盘分区
+	d	显示磁盘挂载
+	m	查看内存使用
+	u	查看系统负载
+	q	退出程序
+	END
+}
+menu
+while true
+do
+read -p "请输入你的操作[h for help]:" var1
+case $var1 in
+	h)
+	menu
+	;;
+	f)
+	read -p "请输入你要查看的设备名字[/dev/sdb]:" var2
+	case $var2 in
+		/dev/sda)
+		fdisk -l /dev/sda
+		;;
+		/dev/sdb)
+		fdisk -l /dev/sdb
+		;;
+	esac
+	;;
+	d)
+	lsblk
+	;;
+	m)
+	free -m
+	;;
+	u)
+	uptime
+	;;
+	q)
+	exit
+	;;
+esac
+done
+
+~~~
 

@@ -1,11 +1,11 @@
 ---
-typora-copy-images-to: pictures
+typora-copy-images-to: ..\pictures
 typora-root-url: ..\pictures
 ---
 
 # 一、==for循环语句==
 
-## 1. for循环语法结构
+## 1. 语法结构
 
 ### ㈠ ==列表循环==
 
@@ -17,7 +17,6 @@ typora-root-url: ..\pictures
 for variable in {list}
      do
           command 
-          command
           …
      done
 ```
@@ -26,7 +25,7 @@ for variable in {list}
 for variable in a b c
      do
          command
-         command
+         …
      done
 ```
 
@@ -37,14 +36,15 @@ for variable in a b c
 # for var in 1 2 3 4 5;do echo $var;done
 # for var in $(seq 10);do echo $var;done
 
-# for var in {0..10..2};do echo $var;done #2或-2都表示步长=2
+# for var in {0..10..2};do echo $var;done #2表示步长
 # for var in {10..1..-2};do echo $var;done
-# for var in `seq 10 -2 1`;do echo $var;done #-2和2不一样，方向不一样
+# for var in `seq 10 -2 1`;do echo $var;done
 ```
 
 - ==continue==：继续；表示==循环体==内下面的代码不执行，重新开始下一次循环
 - ==break==：打断；马上停止执行本次循环，执行==循环体==后面的代码
 - ==exit==：表示直接跳出程序
+- ==shift==：使位置参数向左移动，默认移动1位，可以使用shift 2
 
 ```shell
 #!/bin/bash
@@ -54,9 +54,23 @@ do
 done
 echo hello hahahah
 ```
+**shift举例说明：**
+
+```powershell
+以下脚本都能够实现用户自定义输入数字，然后脚本计算和：
+#!/bin/bash
+sum=0
+while [ $# -ne 0 ]
+do
+let sum=$sum+$1
+shift
+done
+echo sum=$sum
+```
+
 ### ㈡ ==不带列表循环==
 
->  不带列表的for循环执行时由**用户指定参数和参数的个数**
+>  不带列表的for循环:==循环的是$@,不同隐藏了==
 
 - 基本语法格式
 
@@ -88,7 +102,7 @@ echo "脚本后面有$#个参数"
 - **基本语法结构**
 
 ```powershell
-for(( expr1;expr2;expr3 ))
+for (( expr1;expr2;expr3 ))	#注意是(())
 	do
 		command
 		command
@@ -106,7 +120,7 @@ for(( expr1;expr2;expr3 ))
 	
  # for ((i=1;i<=5;i++));do echo $i;done
 ```
-## 2. 应用案例
+## 2. 案例
 
 ### ㈠ 脚本==计算==1-100奇数和
 
@@ -158,7 +172,7 @@ echo "1-100的奇数和是:$sum"
 #### ① 思路
 
 1. 让用户输入一个数，保存到一个变量里   `read -p "请输入一个正整数:" num`
-	. 如果能被其他数整除就不是质数——>`$num%$i `是否等于0	`$i=2到​$num-1`
+	. 如果能被其他数整除就不是质数——>`$num%$i `是否等于0	`$i=2到$num-1`
 3. 如果输入的数是1或者2取模根据上面判断又不符合，所以先排除1和2
 4. 测试序列从2开始，输入的数是4——>得出结果`$num`不能和`$i`相等，并且`$num`不能小于`$i`
 
@@ -267,10 +281,7 @@ for ((i=1;i<=5;i++))
 do
 useradd -G class u$i && echo 123|passwd --stdin u$i
 done
-
 ```
-
-## 3. 课堂练习
 
 ### ㈠ 批量创建用户
 
@@ -377,23 +388,14 @@ else
 fi
 ```
 
-##4. 总结
 
-- FOR循环语法结构
-- FOR循环可以结合==条件判断和流程控制语句==
-  - do ......done  循环体
-  - 循环体里可以是命令集合，再加上条件判断以及流程控制
-- 控制循环语句
-  - continue  继续，跳过本次循环，继续下一次循环
-  - break       打断，跳出循环，==执行==循环体外的代码
-  - exit          退出，直接退出程序
 
 #二、**==while循环语句==**
 
 ##1. while循环语法结构
 
 ~~~powershell
-while 表达式
+while 条件表达式
 	do
 		command...
 	done
@@ -411,7 +413,7 @@ do
 done
 ```
 
-## 2. 应用案例
+## 2. 案例
 
 ### ㈠ 脚本计算1-50偶数和
 
@@ -504,26 +506,17 @@ done
 
 ## 1. until语法结构
 
-```shell
-until expression  eg: [ 1 -eq 1 ]  (( 1 >= 1 ))
+```powershell
+until 条件表达式
 	do
-		command
 		command
 		...
 	done
-
 ```
 
 **打印1-5数字**
 
 ```powershell
-i=1
-while [ $i -le 5 ]
-do
-	echo $i
-	let i++
-done
-
 i=1
 until [ $i -gt 5 ]
 do

@@ -1,5 +1,5 @@
 ---
-typora-copy-images-to: pictures
+typora-copy-images-to: ../pictures
 typora-root-url: ..\pictures
 ---
 # 一、SHELL介绍
@@ -54,38 +54,18 @@ typora-root-url: ..\pictures
 
 ##3. shell脚本
 
-### ㈠ 什么是shell脚本？
-
-- 一句话概括
-
-简单来说就是将==需要执行的命令==保存到文本中，==**按照顺序执行**==。它是解释型的，意味着不需要编译。
-
-- 准确叙述
-
-**若干命令 + 脚本的基本格式 + 脚本特定语法 + 思想= shell脚本**
-
-### ㈢ shell脚本能干啥?
-
- ①自动化软件部署	LAMP/LNMP/Tomcat...	
-
- ②自动化管理		系统初始化脚本、批量更改主机密码、推送公钥...
-
- ③==自动化分析处理==	 统计网站访问量
-
- ④==自动化备份==		数据库备份、日志转储...
-
- ⑤自动化监控脚本
-
 ### ㈥ shell脚本的基本写法
 
 1）**脚本第一行**，魔法字符`#!`指定解释器
 
-`#!/bin/bash`  表示以下内容使用bash解释器解析
+`#!/bin/bash`  ==表示以下内容使用/bin/bash解释器解析==
 
 **注意：**
 如果直接将解释器路径写死在脚本里，可能在某些系统就会存在找不到解释器的兼容性问题，所以可以使用:`#!/bin/env bash`
 
 ==2）**脚本第二部分**，注释==
+
+3）**脚本第三部分**，脚本要实现的具体代码内容
 
 ~~~powershell
 #!/bin/env bash
@@ -102,17 +82,12 @@ commands
 ...
 ~~~
 
-3）**脚本第三部分**，脚本要实现的具体代码内容
+
 
 ### ㈦ shell脚本的执行方法
 
-- 标准脚本执行方法（建议）
-
-` ./first_shell.sh`
-
-- 非标准的执行方法（不建议）
-
-1. 直接指定解释器执行
+1. ` ./first_shell.sh`（标准脚本执行方法,建议）
+2. 直接指定解释器执行
 
 ```powershell
 # bash first_shell.sh
@@ -123,93 +98,38 @@ commands
 -n:用来查看脚本的语法是否有问题
 ```
 
-2. 使用`source`命令读取脚本文件,执行文件里的代码
+3. 使用`source`命令读取脚本文件,执行文件里的代码
 
-```powershell
-# source first_shell.sh
-hello world
-hello world
-hello world
+```shell
+# source first_shell.sh  也等于 . first_shell.sh 
 ```
 
+# 二、变量
+## ==1. 定义变量的方式==
 
-
-# 二、变量的定义
-
-## 3.变量如何定义？
-
-**变量名=变量值**  (==等号两边不能有空格==)
-
-```powershell
-# A=hello			定义变量A
-# echo $A			调用变量A
-hello
-# echo ${A}			还可以这样调用
-hello
-# A=world			重新赋值
-
-# unset A			取消变量
-```
-
-## 4. 变量的定义规则
-
-㈠ 变量名区分大小写
-
-㈡ 变量名不能有特殊符号
-
-```powershell
-# *A=hello
--bash: *A=hello: command not found
-# ?A=hello
--bash: ?A=hello: command not found
-# @A=hello
--bash: @A=hello: command not found
-
-特别说明：对于有空格的字符串给变量赋值时，要用引号引起来
-# A=hello world
--bash: world: command not found
-# A="hello world"
-# A='hello world'
-```
-
-㈢ 变量名不能以数字开头
-
-㈣ 等号两边不能有任何空格
-
-## ==5. 变量的定义方式有哪些？==
+注：==等号两边不能有空格，shell中只有变量定义的时候=两边是不需要空格，其他时候都需要==
 
 ### ㈠ 基本方式
 
-> 直接赋值给一个变量
+**变量名=变量值** 
 
-`# A=1234567`
-
-==$变量名 和 ${变量名}的异同:==
-
-相同点：都可以调用变量
-不同点：${变量名}可以只截取变量的一部分，而$变量名不可以
-
-```powershell
-# echo $A
-1234567
-# echo ${A:2:4}		表示从A变量中第3个字符开始截取，截取4个字符
-3456
+```sh
+# A=hello			定义变量A
+# A="hello world"	#对于有空格的字符串给变量赋值时，要用引号引起来
+# A='hello world'
+# unset A			取消变量
 ```
 
 ### ㈡ 命令执行结果赋值给变量
 
 ```powershell
 # B=`date +%F`
-# echo $B
-2019-04-16
 # C=$(uname -r)
 # echo $C
 2.6.32-696.el6.x86_64  --> 内核版本
 ```
 
 ### ㈢ 交互式定义变量(read)
-
-**目的：**让==用户自己==给变量赋值，比较灵活。
 
 **语法：**`read [选项] 变量名`
 
@@ -258,7 +178,7 @@ tom
 | ==-r== | 定义只读变量               | declare -r B=hello                           |
 | -a     | 定义普通数组；查看普通数组 |                                              |
 | -A     | 定义关联数组；查看关联数组 |                                              |
-| ==-x== | 将变量通过环境导出         | declare -x AAA=123456 等于 export AAA=123456 |
+| ==-x== | 定义环境变量               | declare -x AAA=123456 等于 export AAA=123456 |
 
 **举例说明：**
 
@@ -266,7 +186,7 @@ tom
 # declare -i A=123
 # echo $A
 123
-# A=hello
+# A=hello	#整数型，赋值字符串，=0
 # echo $A
 0
 
@@ -279,43 +199,62 @@ hello
 -bash: unset: B: cannot unset: readonly variable
 ```
 
-## ==6. 变量的分类==
+## 2. 变量的定义规则
+
+㈠ 变量名区分大小写
+
+㈡ 变量名不能有特殊符号(*?@#)
+
+㈢ 变量名不能以数字开头
+
+```powershell
+# *A=hello
+-bash: *A=hello: command not found
+# ?A=hello
+-bash: ?A=hello: command not found
+# @A=hello
+-bash: @A=hello: command not found
+```
+
+## 3.调用变量
+
+==`$A	和	echo ${A}`==
+
+```powershell
+${}可以截取变量中一部分
+# echo ${A:2:4}		表示从A变量中第3个字符开始截取，截取4个字符
+```
+
+
+## ==6. 变量作用域==
 
 ### ㈠ 本地变量
 
 - **==本地变量==**：当前用户自定义的变量。当前进程中有效，其他进程及**当前进程的子进程无效**。
 
+  ```sh
+  /bin/bash # 在当前进程下开一个子进程  exit可退出当前进程
+  ps -auxf |grep bash # 查看进程父子关系
   ```
-  查看进程父子关系
-  $ ps -auxf |grep bash
-  ipnet    19447  0.0  0.0 115440  2000 pts/0    Ss   10:29   0:00         \_ -bash
-  ipnet    20741  0.0  0.0 115440  1984 pts/1    Ss   10:43   0:00         \_ -bash
-  root     20844  0.0  0.0 115440  2008 pts/1    S    10:44   0:00         |       \_ -bash
-  ipnet    22356  0.0  0.0 115440  2028 pts/2    Ss   11:14   0:00         \_ -bash
-  ipnet    27420  0.0  0.0 115440  1984 pts/2    S    23:50   0:00         |   \_ bash
-  ipnet    27448  0.0  0.0 112708   948 pts/2    S+   23:50   0:00         |       \_ grep --color=auto bash
-  ipnet    23420  0.0  0.0 115440  2016 pts/3    Ss+  11:29   0:00          \_ -bash
 
-  ```
+![image-20200328215035153](/image-20200328215035153.png)
 
 ### ㈡ 环境变量
 
 - **环境变量**：当前进程有效，**并且能够被子进程调用**。
+
+  - `export 定义环境变量`
+
   - `env`查看当前用户的环境变量
-  - `set`查询当前用户的所有变量(临时变量与环境变量) 
-  - `export 变量名=变量值`    或者  `变量名=变量值；export 变量名`
+  - `set`查询当前用户的所有变量(本地变量与环境变量) 
+
 
 ~~~powershell
-# export A=hello		临时将一个本地变量（临时变量）变成环境变量
+# export A=hello
 # env|grep ^A
-A=hello
 
 永久生效：
 vim /etc/profile 或者 ~/.bashrc
-export A=hello
-或者
-A=hello
-export A
 
 说明：系统中有一个变量PATH，环境变量
 export PATH=/usr/local/mysql/bin:$PATH
@@ -324,18 +263,20 @@ export PATH=/usr/local/mysql/bin:$PATH
 ### ㈢ 全局变量
 
 
-- **全局变量**：全局所有的用户和程序都能调用，且继承，新建的用户也默认能调用.
+- **全局变量**：所有进程都能调用
 
 - **解读相关配置文件**
 
-| 文件名               | 说明                                   | 备注                                                       |
-| -------------------- | -------------------------------------- | ---------------------------------------------------------- |
-| $HOME/.bashrc        | 当前用户的bash信息,用户**登录**时读取  | 定义别名、umask、函数等                                    |
-| $HOME/.bash_profile  | 当前用户的环境变量，用户**登录**时读取 |                                                            |
-| $HOME/.bash_logout   | 当前用户**退出**当前shell时最后读取    | 定义用户退出时执行的程序等                                 |
-| /etc/bashrc          | 全局的bash信息，所有用户都生效         |                                                            |
-| /etc/profile         | 全局环境变量信息                       | 系统和所有用户都生效                                       |
-| \$HOME/.bash_history | 用户的历史命令                         | history -w   保存历史记录         history -c  清空历史记录 |
+  /etc下全局，~/下是全局
+
+| 文件名          | 说明                                   | 备注                                                       |
+| --------------- | -------------------------------------- | ---------------------------------------------------------- |
+| $HOME/.bashrc   | 当前用户的bash信息,用户**登录**时读取  | 定义别名、umask、函数等                                    |
+| ~/.bash_profile | 当前用户的环境变量，用户**登录**时读取 |                                                            |
+| ~/.bash_logout  | 当前用户**退出**当前shell时最后读取    | 定义用户退出时执行的程序等                                 |
+| /etc/bashrc     | 全局的bash信息，所有用户都生效         | bash run config                                            |
+| /etc/profile    | 全局环境变量信息                       | 系统和所有用户都生效                                       |
+| ~/.bash_history | 用户的历史命令                         | history -w   保存历史记录         history -c  清空历史记录 |
 
 **说明：**以上文件修改后，都需要重新==source==让其生效或者退出重新登录。
 
@@ -355,15 +296,15 @@ export PATH=/usr/local/mysql/bin:$PATH
 | $?           | 上一条命令执行后返回的状态；状态值为0表示执行正常，==非0==表示执行异常或错误 |
 | $0           | 当前执行的程序或脚本名                                       |
 | $#           | 脚本后面接的参数的==个数==                                   |
-| $*           | 脚本后面==所有参数==，参数当成一个整体输出，每一个变量参数之间以空格隔开 |
-| $@           | 脚本后面==所有参数==，参数是独立的，也是全部输出             |
+| $*           | 脚本后面==所有参数==，==参数当成一个整体输出==，每一个变量参数之间以空格隔开 |
+| $@           | 脚本后面==所有参数==，==参数是独立的==，也是全部输出         |
 | \$1\~$9      | 脚本后面的==位置参数==，$1表示第1个位置参数，依次类推        |
 | \${10}\~${n} | 扩展位置参数,第10个位置变量必须用{}大括号括起来(2位数字以上扩起来) |
 | ==$$==       | 当前所在进程的进程号，如`echo $$`                            |
 | $！          | 后台运行的最后一个进程号 (当前终端）                         |
 | !$           | 调用最后一条命令历史中的==参数==                             |
 
-- 进一步了解位置参数`$1~${n}`
+- 案例
 
 ```powershell
 #!/bin/bash
@@ -377,6 +318,7 @@ echo "\$2 = $2"
 echo "\$3 = $3" 
 echo "\$11 = ${11}" 
 echo "\$12 = ${12}" 
+echo "\$$ = $$" 
 ```
 
 - 进一步了解\$*和​\$@的区别
@@ -404,79 +346,46 @@ b
 c
 ======我是分割线=======
 a b c
-
 ```
 
 # 三、简单四则运算
 
-算术运算：默认情况下，shell就只能支持简单的==整数==运算
+==默认情况下，shell就只能支持简单的整数运算==
 
 运算内容：加(+)、减(-)、乘(*)、除(/)、求余数（%）
 
 ## 1. 表达式
 
-| 表达式  | 举例                                                         |
-| ------- | ------------------------------------------------------------ |
-| $((  )) | echo $((1+1))                                                |
-| $[ ]    | echo $[10-5]                                                 |
-| expr    | expr 10 / 5  expr 10 \\* 5 (==符号左右需空格，expr表达式的格式，*需要转移==) |
-| let     | n=1;let n+=1  等价于  let n=n+1   ==let表达式内变量不用加$== |
+| 表达式  | 举例          |
+| ------- | ------------- |
+| $((  )) | echo $((1+1)) |
+| $[ ]    | echo $[10-5]  |
+
+另外两个计算的命令：
+
+`expr`:expr 10 / 5  expr 10 \\* 5 (==符号左右需空格，expr表达式的格式，*需要转移义)
+
+`let 用于计算变量，所以前提是要先定义变量`:n=1;let n+=1  等价于  let n=$n+1    (\$可省略)，==let 使用较多==
 
 ==备注：==
 ==$() = ``== ：执行命令
 ==\$A=\${A}== ： 引用变量
 ==\$(())=\$[]==：运算表达式
 
-**==番外篇：(( ))符号的作用：==**
-
-1. 运算  即$(())表达式
-
-   ```shell
-   # 表达式 $((exp))，其中exp只要符合C语言规则的运算符即可，包括加减乘除、+=、<=、>=等.
-   echo $((2*2+(1-2))) # 输出3
-   a=1
-   echo $((a++)) # 输出1，且从此之后a=2
-   echo $((2#10+4)) # 输出6，在10前面的2#表示这是个二进制
-   echo $((1<2)) # 0为假，1为真。
-   ```
-
-   ​
-
-2. 赋值
-
-   ```shell
-   #没啥用
-   ((a=2))
-   ```
-
-   ​
-
-3. 比较
-
-   ```shell
-   #在((exp))中可以进行算术比较（不能进行字符串比较），双括号中的变量可省略$符号前缀，当然也可以带着
-   a=1
-   ((a==1)) && echo "true" # 输出 true
-   (($a==1)) && echo "true" # 输出 true
-   ```
-
-   ​
-
-# 四、扩展补充
+# 四、数组
 
 ## 1. 数组定义
 
 ### ㈠ 数组分类
 
-- 普通数组：只能使用整数作为数组索引(元素的下标)
-- 关联数组：可以使用字符串作为数组索引(元素的下标)
+- ==普通数组==：只能使用整数作为数组索引
+- ==关联数组==：可以使用字符串/整数作为数组索引
 
 ### ㈡ 普通数组定义
 
 - 一次赋予一个值
 
 ```powershell
-数组名[索引下标]=值
 array[0]=v1
 array[1]=v2
 array[2]=v3
@@ -487,32 +396,16 @@ array[3]=v4
 
 ```powershell
 数组名=(值1 值2 值3 ...)
-array=(var1 var2 var3 var4)
 
 array1=(`cat /etc/passwd`)			将文件中每一行赋值给array1数组
-array2=(`ls /root`)
+array2=($(ls /root))
 array3=(harry amy jack "Miss Hou")
 array4=(1 2 3 4 "hello world" [10]=linux)
 ```
 
-### ㈢ 数组的读取
+### ㈢ 关联数组定义
 
-```powershell
-${数组名[元素下标]}
-
-echo ${array[0]}			获取数组里第一个元素
-echo ${array[*]}			获取数组里的所有元素
-echo ${#array[*]}			获取数组里所有元素个数
-echo ${!array[@]}    	获取数组元素的索引下标
-echo ${array[@]:1:2}    访问指定的元素；1代表从下标为1的元素开始获取；2代表获取后面几个元素
-
-查看普通数组信息：
-# declare -a
-```
-
-### ㈣ 关联数组定义
-
-#### ①首先声明关联数组
+#### ①声明关联数组（可省略）
 
 ```powershell
 declare -A asso_array1
@@ -528,7 +421,7 @@ declare -A asso_array3
 数组名[索引or下标]=变量值
 # asso_array1[linux]=one
 # asso_array1[java]=two
-# asso_array1[php]=three
+# asso_array1[2]=three
 ```
 
 - 一次赋多个值
@@ -537,50 +430,39 @@ declare -A asso_array3
 # asso_array2=([name1]=harry [name2]=jack [name3]=amy [name4]="Miss Hou")
 ```
 
-- 查看关联数组
-
-```powershell
-# declare -A
-declare -A asso_array1='([php]="three" [java]="two" [linux]="one" )'
-declare -A asso_array2='([name3]="amy" [name2]="jack" [name1]="harry" [name4]="Miss Hou" )'
-```
-
-- 获取关联数组值
-
-```powershell
-# echo ${asso_array1[linux]}
-one
-# echo ${asso_array1[php]}
-three
-# echo ${asso_array1[*]}
-three two one
-# echo ${!asso_array1[*]}
-php java linux
-# echo ${#asso_array1[*]}
-3
-# echo ${#asso_array2[*]}
-4
-# echo ${!asso_array2[*]}
-name3 name2 name1 name4
-```
-
 - 其他定义方式
 
 ```powershell
-[root@MissHou shell05]# declare -A books
-[root@MissHou shell05]# let books[linux]++
-[root@MissHou shell05]# declare -A|grep books
+# declare -A books
+# let books[linux]++
+# declare -A|grep books
 declare -A books='([linux]="1" )'
-[root@MissHou shell05]# let books[linux]++
-[root@MissHou shell05]# declare -A|grep books
+# let books[linux]++
+# declare -A|grep books
 declare -A books='([linux]="2" )'
 ```
 
+### ㈣ 数组的读取
 
+```powershell
+${数组名[元素下标]}
 
-## 2. 其他变量定义
+echo ${array[0]}			获取数组里第一个元素，关联数组还可以用string
+echo ${array[*]}			获取数组里的所有元素
+echo ${#array[*]}			获取数组里所有元素个数
+echo ${!array[@]}    	获取数组元素的索引下标
+echo ${array[@]:1:2}    访问指定的元素；1代表从下标为1的元素开始获取；2代表获取后面几个元素
 
-- 取出一个目录下的目录和文件：`dirname`和 `basename` 
+# declare -a	查看所有普通数组
+# declare -A	查看所有关联数组
+```
+
+### 
+
+# 五. 其他常用小命令
+
+- `dirname ： 取出目录`
+- ``basename : 取出文件` 
 
 ```powershell
 # A=/root/Desktop/shell/mem.txt 
