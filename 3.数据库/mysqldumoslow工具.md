@@ -1,14 +1,12 @@
 #### 1. 可能会用到的sql：
 ``` sql
-show variables like '%slow_query_log%';
-show variables like '%slow_query_log_file%';
-show variables like '%long_query_time%';
+slow_query_log		#慢查询开关
+slow_query_log_file #慢查询文件位置
+long_query_time 	#单位秒，超过这个时间则记录，且slow_queries+1
+slow_launch_time 	#创建线程的阈值,且Slow_launch_threads(慢建立线程数)+1
 
 -- 没有索引的查询是否记录到慢查询日志
 show variables like '%log_queries_not_using_indexes%';
-
--- 数据库版本
-show variables like '%version%';
 
 -- 查看表索引
 SHOW INDEX FROM dpb_froze;

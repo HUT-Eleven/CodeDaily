@@ -16,7 +16,7 @@ typora-root-url: ../assets
 <img src="/image-20200321130901781.png" alt="image-20200321130901781" style="zoom:80%;" />
 
 
-1. ClassLoader就像快递员，加载.class文件，而不同的场景需要不同级别快递员来分配工作，来提高整体安全和效率；
+1. ClassLoader就像快递员，加载.class文件，而不同的场景需要不同级别快递员（类加载器）来加载，来提高整体安全和效率；
 2. 加载完之后就形成了==Class模板==，实例化对象就是根据这些模板，模板只有一个，对象是可以无数个的。
 
 3. .class文件的开头有==特定的文件标示: cafe babe==，快递员就是根据这个标识来识别是不是他需要的快递。
@@ -97,7 +97,7 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 
 > 方法区可以理解为一个放模板的地方，是共享的。
 
-1. 存储每个类的结构信息（字节码形式），包括：==常量池(已移除)==、字段、构造函数、普通函数等等
+1. 存储每个类的结构信息（字节码形式），包括：==常量池(已移至元空间)==、字段、构造函数、普通函数等等
 
 2. ==线程共享==
 
@@ -107,16 +107,14 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
    永久代用的是JVM的堆内存；
    元空间直接用本地物理内存，所以元空间的数据不再占用堆内存，原本在永久代中的==字符串常量池、静态常量==移到==堆==中
 
-4. 方法区不涉及垃圾回收
+4. 方法区一般不涉及垃圾回收
 
 ---
-
-
 
 ### Heap
 
 1. 堆：存放==对象实例==的内存区域
-2. 堆是jvm中占用内存最大的，所谓垃圾回收，主要就是堆的垃圾回收，而JVM的其他部分不涉及垃圾回收。
+2. 堆是jvm中占用内存最大的，所谓垃圾回收，就是堆的垃圾回收。
 3. ==线程共享==
 4. 减少频繁GC的目的：==GC操作会暂停所有的应用程序线程==，而FGC耗时又长，如果系统频繁FGC,则可能导致系统出现故障（超时、卡顿、OOM等）
 
@@ -130,7 +128,7 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 #### 二、YGC
 
 1. YGC也称==MinorGC==, 是==新生代==的垃圾收集动作。
-2. 整个过程：==**复制-->清空-->交换**==。
+2. 整个过程：==**回收-->复制-->清空-->交换**==。
 3. 新生代的垃圾回收算法是==复制算法==:总是空出一块内存，把存活下的复制到空存上面，原来的内存清空。==复制算法不会产生内存碎片==，但是会浪费空闲内存，所以适用于新生代，对象存活时间短的。
 
 <img src="/image-20200322175033946.png" alt="image-20200322175033946" style="zoom: 50%;" />
@@ -167,7 +165,7 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 
 [参数含义](https://blog.csdn.net/albertfly/article/details/51623138)
 
-##### ==生产案例==
+##### ==案例==
 
 **SME-DIT2-JVM配置（JDK1.8 , 8G内存）**
 
@@ -179,11 +177,11 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 -XX:MetaspaceSize=256m		# 元空间初始内存
 -XX:MaxMetaspaceSize=512m	# 元空间最大内存
 -XX:+UseFastAccessorMethods	# 原始类型的快速优化
--XX:+UseCompressedOops		
--XX:+DisableExplicitGC		# 关闭System.gc(),避免代码中调用gc方法影响性能
--XX:+ExplicitGCInvokesConcurrent
+-XX:+UseCompressedOops		# http://www.yayihouse.com/yayishuwu/chapter/1956
+-XX:+DisableExplicitGC		# 关闭显式FGC，即System.gc(),避免代码中调用gc方法影响性能
+-XX:+ExplicitGCInvokesConcurrent #显式FGC改为并发进行
 -XX:ParallelGCThreads=8		# 并行收集器的线程数
--XX:-UseAdaptiveSizePolicy	#自动选择年轻代区大小和相应的Survivor区比例，使用并行收集器时建打开
+-XX:-UseAdaptiveSizePolicy	#自动选择年轻代区大小中Survivor区比例，使用并行收集器时建议打开
 -Xmn1024m					#新生代的大小，这样新生代就占了堆的1/2
 -XX:SurvivorRatio=6			#Eden:Survivor from: Survivor To=6:1:1
 
@@ -221,18 +219,16 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 -Dinternational.enable=true
 -Dlanguage.conf=en
 -Dfile.encoding=UTF-8
-cn.sunline.edsp.microcore.boot.Bootstrap start
 ```
 **其他配置**
 ```sh
--Xss	每个线程的堆栈大小,一般不配置，栈不是很深的话，默认大小足够用。
+-Xss	每个线程的栈大小,一般不配置，栈不是很深的话，默认大小足够用。
 -XX:PrintHeapAtGC	打印GC前后的详细堆栈信息
 
 ## 2.收集器设置
 -XX:+UseSerialGC		设置串行收集器
 -XX:+UseParallelGC		设置并行收集器,此配置仅对年轻代有效,而年老代仍旧使用串行收集
 -XX:+UseParalledlOldGC	设置并行年老代收集器
--XX:+UseConcMarkSweepGC	设置并发标记清楚收集器
 	## 2.1 并行收集器设置
 	-XX:ParallelGCThreads=n:并行收集器的线程数,即:同时多少个线程一起进行垃圾回收。此值最好配置与处理器数目相等
 	-XX:MaxGCPauseMillis=n:设置并行收集最大暂停时间
@@ -276,7 +272,7 @@ jps -l # list出当前虚拟机所有进程号+启动类全名
 ![image-20200327133552991](/image-20200327133552991.png)
 
 ```sh
-jps -v # 输出传入JVM的参数
+jps -v # 输出传入JVM的参数（但不包含JVM一些默认配置信息）
 ```
 
 ![image-20200327133607470](/image-20200327133607470.png)
@@ -293,7 +289,8 @@ jps -v # 输出传入JVM的参数
 
 ```sh
 options:
-	-gcutil:gc情况统计
+	-gcutil:总结垃圾回收统计(偏显示的是内存使用率)
+	-gc	:垃圾回收统计(偏显示的是内存大小)
 	-class :类加载统计
 	-compiler:编译统计
 ```
@@ -301,6 +298,8 @@ options:
 #### ==4. jstack==
 
 作用：生成线程快照信息
+
+格式：jstat [options] [pid] 
 
 ```sh
 -l	#打印关于锁的附加信息
@@ -326,7 +325,7 @@ options:
 
 ```sh
 # 1. dump : 生成堆转储快照
-jmap -dump:live,format=b,file=dump.hprof PID
+jmap -dump:live,format=b,file=dump.hprof PID	#format=b ：binary format
 注：-XX:+HeapDumpOnOutOfMemoryError可在OOM时自动生成dump文件
 
 # 2. -finalizerinfo：打印等待回收对象的信息
