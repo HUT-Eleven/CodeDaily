@@ -1,6 +1,6 @@
 ---
-typora-copy-images-to: pictures
-typora-root-url: ../pictures
+typora-copy-images-to: ../pictures
+typora-root-url: ..\pictures
 ---
 
 #### 一、使用隧道与代理完成跳板机中转

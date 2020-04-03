@@ -1,3 +1,10 @@
+---
+typora-copy-images-to: /assets
+typora-root-url: /assets
+---
+
+
+
 ### ==事务==
 
 #### 一、四个问题
@@ -8,8 +15,6 @@
 - 不可重复读
 - 幻读
    幻读与不可重复读的区别：不可重复读侧重是对同一条数据的修改导致，幻读是新增/删除数据导致的。锁的范围不一样。
-
-----
 
 #### 二、四种隔离级别
 
@@ -27,7 +32,7 @@
 
 查看数据库配置：
 
-![image-20200320155136770](assets/image-20200320155136770.png)
+![image-20200320155136770](/image-20200320155136770.png)
 
 可以看到autocommit是ON,
 注：多数生产环境都必须配置为ON。
@@ -55,19 +60,21 @@ show variables like '%log_queries_not_using_indexes%';
 
 -- 查看表索引
 SHOW INDEX FROM dpb_froze;
+show keys from app_rule;
 -- 看库的所有索引
 SELECT * FROM information_schema.STATISTICS WHERE table_schema='cbs_uat_cug2';
 ```
 ---
 #### 2. mysql-slow.log文件内容：
+
+**注**：**DML**语句也会记录到日志中
+
 ``` sql
 # Time(发生时间): 2017-06-03T06:48:27.030315Z
 # User@Host: root[root] @ localhost（主机信息） []  Id:3
 # Query_time（查询时间）: 1.896889  Lock_time（等待锁的时间）: 0.000823 Rows_sent(返回客户端行总数): 100000  Rows_examined(扫描行总数): 200000
 SET timestamp=1496472507; 
 select * from z_order limit 100000;
-
-注：DML语句也会记录到日志中
 ```
 ---
 
@@ -125,27 +132,28 @@ mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
 
 **重点**：explain可以模拟服务层中的Query Optimizer来查看==**Mysql执行计划**==，**也即执行阶段，非Query Optimizer分解sql进行优化的阶段！**所以，Explain显示的是执行计划。
 
-##### 总览图
+#### 总览图
 
 不同版本的Explain差异：
 
 **5.5.x**
 
-![image-20200331181524419](assets/image-20200331181524419.png)
+![image-20200331181524419](/image-20200331181524419.png)
 
 **8.0.x**
 
 ==多了partitions/fitered==
 
-![image-20200331181557503](assets/image-20200331181557503.png)
+![image-20200331181557503](/image-20200331181557503.png)
 
 ##### 1. id-表的读取顺序
 
-规律：id越大，执行的优先级越高。id相同，则按从上到下的顺序。为null的情况：Union/ Union all结果总是放在一张临时表中，而这张临时表不在sql中体现，所以为null。
+规律：id越大，执行的优先级越高。id相同，则按从上到下的顺序。
+			为null的情况：Union/ Union all结果总是放在一张临时表中，而这张临时表不在sql中体现，所以为null。
 
 经验：往往最里层的子查询id更大，即越优先执行。			
 
-![image-20200331190655049](assets/image-20200331190655049.png)
+![image-20200331190655049](/image-20200331190655049.png)
 
 ##### 2. select_type-查询类型
 
@@ -153,15 +161,15 @@ mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
 
 1. ==**simple**==：简单查询，**可以是多表**，但不包含子查询 或 union等
 
-   ![image-20200331184650383](assets/image-20200331184650383.png)
+   ![image-20200331184650383](/image-20200331184650383.png)
 
 2. ==**primary**==：复杂查询中最外层的 select
 
      如两表做UNION,则第一个union前的select是primary；
      存在子查询的最外层的表操作为primary。
-      ![image-20200331184930309](assets/image-20200331184930309.png)
+      ![image-20200331184930309](/image-20200331184930309.png)
 
-     ![image-20200331185122213](assets/image-20200331185122213.png)
+     ![image-20200331185122213](/image-20200331185122213.png)
 
 3. ==**subquery**==：包含在 select 中的子查询（**不在 from 子句中**）
 
@@ -169,61 +177,62 @@ mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
 
    案例：primary、subquery、derived综合案例：==select **subquery** from **derived**==
 
-   ![image-20200331191503511](assets/image-20200331191503511.png)
+   ![image-20200331191503511](/image-20200331191503511.png)
 
 5. ==**union**==：在 union/union all中，除了第一张表的select_type为primary，后面的所有表的都为union
 
 6. ==**union result**==：union/union all之后的结果（备：id值通常为NULL）
 
-   ![image-20200331192207784](assets/image-20200331192207784.png)
+   ![image-20200331192207784](/image-20200331192207784.png)
 
 7. **==dependent subquery==**(略)
 ##### 3. table-表
 
 特殊：当 from 子句中有子查询时，table列是 <derivenN> 格式，表示当前查询**依赖** id=N 的查询，于是先执行 id=N 的查询。当有 union 时，UNION RESULT 的 table 列的值为 <union1,2>，1和2表示参与 union 的 select 行id。
 
-![image-20200331192844388](assets/image-20200331192844388.png)
+![image-20200331192844388](/image-20200331192844388.png)
 
-   	![image-20200331192922620](assets/image-20200331192922620.png)
+   	![image-20200331192922620](/image-20200331192922620.png)
 
 ##### 4. type-访问类型
 
 **从好到差**：system > const > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > ALL。以及特殊：**null**
+可能会因为一些原因，访问类型比预期要低，但一般不会高于预期。
 
 1. **==null==**：mysql能够在优化阶段分解查询语句，并查到了想要的结果，在**执行阶段不用再访问表或索引**，所以访问类型为null。
    例如：**在索引列中选取最小值**，可以单独查找索引来完成，不需要在执行时访问表。
 
-   ![image-20200331235919028](assets/image-20200331235919028.png)
+   ![image-20200331235919028](/image-20200331235919028.png)
 
 2. ==**const, system**==：mysql能对查询的某部分进行优化并将其转化成一个常量（可以看**==show warnings==** 的结果）。常见场景：**==单表查询==用 primary key 或 unique key 的所有列与常数比较时**，则**只会有一行匹配**，读取1次，速度比较快。
 
-   ![image-20200401000827664](assets/image-20200401000827664.png)
+   ![image-20200401000827664](/image-20200401000827664.png)
 
-3. **==eq_ref==**：相比const/system,  er_ref就是多表的情况。primary key 或 unique key索引的所有列被使用 ，最多只会返回一条符合条件的记录。简单而言，就是外循环每次到内循环中遍历数据，都只有一条数据匹配。
+3. **==eq_ref==**：相比const/system,  er_ref就是**多表**的情况。primary key 或 unique key索引的所有列被使用 ，最多只会返回一条符合条件的记录。简单而言，就是外循环每次到内循环中遍历数据，都只有一条数据匹配。
 
-   ![image-20200401003401450](assets/image-20200401003401450.png)
+   ![image-20200401003401450](/image-20200401003401450.png)
 
-4. **==ref==**：相比 `eq_ref`，ref是**使用普通索引或者唯一性索引的部分前缀**，匹配行可能不唯一
+4. **==ref==**：相比 `eq_ref`，ref是**使用普通索引或者唯一性索引的部分前缀，匹配行可能不唯一**
 
-   <img src="assets/image-20200401003645984.png" alt="image-20200401003645984" style="zoom:150%;" />
+   <img src="/image-20200401003645984.png" alt="image-20200401003645984" style="zoom:150%;" />
 
 5. ==**ref_or_null**==：相比ref,多了搜索值=null的行
 
-   ![image-20200401011336914](assets/image-20200401011336914.png)
+   ![image-20200401011336914](/image-20200401011336914.png)
 
 6. ==**index_merge**==：表示使用了索引合并的优化方法。执行计划用到两个索引，mysql进行合并索引。
    例如下表：id是主键，tenant_id是普通索引。or 的时候没有用 primary key，而是使用了 primary key(id) 和 tenant_id 索引。
 
-   ![image-20200401011636617](assets/image-20200401011636617.png)
+   ![image-20200401011636617](/image-20200401011636617.png)
 
 7. ==**range**==：用到了索引，搜索范围。
    常见：in(), between ,> ,<, >= 
 
 8. ==**index**==：用到了索引，只扫描索引树便得到了结果，但没有全表扫描（使用索引文件）
 
-   ![image-20200401012303621](assets/image-20200401012303621.png)
+   ![image-20200401012303621](/image-20200401012303621.png)
 
-9. ==**ALL**==：全表扫描！！！
+9. ==**ALL**==：全表扫描！！！(如果是数据量很大的表中出现这个，基本上必须**优化**)
 
 ##### 5. possible_keys-可能用到的索引
 
@@ -252,10 +261,11 @@ key_len计算规则如下：
         date：3字节
         timestamp：4字节
         datetime：8字节
-    如果字段允许为 NULL，需要1字节记录是否为 NULL
+    如果字段允许为 NULL，需要1字节记录是否为 NULL；
+	可变字符需要+2位
 ```
 
-![image-20200401014734289](assets/image-20200401014734289.png)
+![image-20200401014734289](/image-20200401014734289.png)
 
 ##### 8. ref
 
@@ -267,3 +277,53 @@ key_len计算规则如下：
 预计扫描多少行
 
 ##### 10. extra-额外信息
+
+1. ==**distinct**==：用到了distinct，表示：一旦mysql找到了与行相联合匹配的行，就不再搜索了。
+
+2. ==**Using index**==：**高效**，使用了索引表即获得了想要的结果，无需访问表数据文件，即**==索引覆盖==**。
+
+   例如：select list 中的内容都为所用索引中的字段。
+
+   ![image-20200401110931503](/image-20200401110934580.png)
+
+3. **==Using where==**：where+扫描了表数据文件
+
+4. ==**Using temporary**==：出现临时表，效率非常低，**建议优化**.
+
+   ![image-20200401113058070](/image-20200401113058070.png)
+
+5. ==**Using filesort**==：**排序字段不是 或者不能使用索引时，Mysql使用“FileSort(文件排序)”策略**.mysql 会对结果使用一个外部索引排序，而不是按索引次序从表里读取行。此时mysql会根据联接类型浏览所有符合条件的记录，并保存排序关键字和行指针，然后排序关键字并按顺序检索行信息。这种情况下一般也是要考虑使用索引来优化的。**建议优化**.
+
+   ![image-20200401113938970](/image-20200401113938970.png)
+
+---
+
+#### sql优化
+
+1. **join语句优化**：永远是**==小表驱动大表==**,优先优化内循环。
+   所以：左连接，索引建右表；右连接，索引建左表。
+   l左连接：左边的永远是“大表”，右边是“小表”。小表驱动大表原则,在小表上建索引。右连接同理
+
+2. **索引失效**：
+
+   1. **最左前缀原则**：如果引用到了复合索引，要尽可能按左到右的顺序使用到索引。索引哪一列开始没用上，索引就从哪里开始失效。
+      **比如**：索引列是 c1_c2_c3，如果用到了c2,c3，则全部失效。如果用c1,c3，则c2,c3失效。
+   2. 使用索引列做查询时尽量不要在该列上做计算或表达式，把逻辑移到代码层中而不是数据库层。
+      如：select * from tbname where id+1=2;
+              select * from tbname where left(id,2)=10;
+
+   3. 聚集索引优于普通索引，因为聚集索引不会回表查询。
+   4. 范围之后全失效
+
+
+
+
+
+
+
+
+
+
+
+
+
