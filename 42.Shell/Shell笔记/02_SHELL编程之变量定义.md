@@ -249,9 +249,9 @@ ${}可以截取变量中一部分
   - `set`查询当前用户的所有变量(本地变量与环境变量) 
 
 
-~~~powershell
-# export A=hello
-# env|grep ^A
+~~~sh
+export A=hello
+env|grep ^A
 
 永久生效：
 vim /etc/profile 或者 ~/.bashrc
