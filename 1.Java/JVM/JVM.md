@@ -80,14 +80,14 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 ---
 ### Java栈
 
-> 以下“栈”都为Java栈，不包含本地方法栈
+> 也称为“虚拟机栈”
 
 1. ==”栈“管运行，”堆“管存储==
 2. 线程创建时创建，生命周期跟随线程，线程结束栈内存也就释放
-3. 栈不存在垃圾回收问题，但可能出现==java.lang.StackOverflowError==，如递归场景。
+3. 如果线程请求的栈深度大于虚拟机所允许的深度，将抛出==java.lang.StackOverflowError==，如递归场景。栈一般不存在垃圾回收问题。
 4. 栈是==线程私有==，一个线程一个栈
-5. 栈存放的内容：==8种基本数据类型（byte,short,int,long,float,double,boolean,char) + 对象引用(以及常量的引用) + 实例方法==
-6. 方法进栈就叫==“栈帧”==
+5. 方法进栈就叫==“栈帧”==
+6. **栈帧**存放的内容：==8种基本数据类型（byte,short,int,long,float,double,boolean,char) + 对象引用(以及常量的引用)+returnAddress类型（指向了一条字节码指令的地址）。==
 
 <img src="/image-20200322122359477.png" alt="image-20200322122359477" style="zoom: 50%;" />
 
@@ -187,7 +187,7 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 ##2.CMS相关参数##
 -XX:+UseConcMarkSweepGC		#使用CMS内存收集
 -XX:+CMSParallelRemarkEnabled	#降低标记停顿
--XX:+UseCMSCompactAtFullCollection	#在FULL GC的时候， 对年老代的压缩
+-XX:+UseCMSCompactAtFullCollection	#在FULL GC的时候，对年老代的压缩
 -XX:+UseCMSInitiatingOccupancyOnly	#使用手动定义初始化定义开始CMS收集
 -XX:CMSInitiatingOccupancyFraction=70	#使用70％后开始CMS收集
 
@@ -221,9 +221,10 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 ```
 **其他配置**
 ```sh
--Xss	每个线程的栈大小,一般不配置，栈不是很深的话，默认大小足够用。
+-Xss	每个线程的栈大小,一般不配置。在内存层面，HotSpot是不区分虚拟机栈和本地方法栈的。
 -XX:PrintHeapAtGC	打印GC前后的详细堆栈信息
-
+-XX：+/-UseTLAB	使用本地线程分配缓冲(Thread Local Allocation Buffer)
+-XX：+PrintFlagsFinal	查看参数默认值也是一个很好的选择
 ## 2.收集器设置
 -XX:+UseSerialGC		设置串行收集器
 -XX:+UseParallelGC		设置并行收集器,此配置仅对年轻代有效,而年老代仍旧使用串行收集
