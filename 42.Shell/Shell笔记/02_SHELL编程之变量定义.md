@@ -462,7 +462,7 @@ echo ${array[@]:1:2}    访问指定的元素；1代表从下标为1的元素开
 # 五. 其他常用小命令
 
 - `dirname ： 取出目录`
-- ``basename : 取出文件` 
+- `basename : 取出文件` 
 
 ```powershell
 # A=/root/Desktop/shell/mem.txt 

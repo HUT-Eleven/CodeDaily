@@ -3,13 +3,6 @@ typora-copy-images-to: ../pictures
 typora-root-url: ..\pictures
 ---
 
-#课程目标
-
-- 熟悉awk的**命令行模式**基本语法结构
-- ==熟悉awk的相关内部变量==
-- 熟悉awk常用的打印==函数print==
-- 能够在awk中匹配正则表达式打印相关的行
-
 # 一、awk介绍
 
 ## 1. awk概述
