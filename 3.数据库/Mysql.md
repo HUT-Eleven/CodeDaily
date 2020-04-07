@@ -3,7 +3,60 @@ typora-copy-images-to: /assets
 typora-root-url: /assets
 ---
 
+### ==mysql高级语法==
 
+#### help
+
+```sql
+help 关键字...
+-- 需要在命令行界面执行
+help show
+help show processlist
+help lock
+help select
+......
+```
+
+#### show
+
+`help show`：查看show的所有用法。show指令的参数繁多，以下罗列几种常用的，[具体上网查询](https://www.cnblogs.com/saneri/p/6963583.html)。
+
+##### status--服务器状态信息
+
+```sql
+help show status
+Syntax:
+	SHOW [GLOBAL | SESSION] STATUS [LIKE 'pattern' | WHERE expr]
+-- 常用like，where不常用where variable_name='xxx%';共有400+个值
+```
+
+eg:
+
+```sql
+-- 表锁相关
+table_locks_immediate	-- 立即获得表锁的次数
+table_locks_waited		-- 不能立即获得表锁的次数，即锁等待，该值高表示性能有问题！
+-- 行锁相关
+innodb_row_lock_time	--等待总时长
+innodb_row_lock_time_avg--等待平均时长
+innodb_row_lock_waits	--等待总次数
+......
+```
+
+##### variables--服务器变量
+
+![image-20200408002239845](/image-20200408002239845.png)
+
+```sql
+-- 慢查询相关
+slow_query_log			-- 慢查询开关
+slow_query_log_file 	-- 慢查询文件位置
+long_query_time 		-- 慢查询阈值，单位秒，
+slow_queries			-- 慢查询次数
+slow_launch_time 		-- 创建线程的阈值,且Slow_launch_threads(慢建立线程数)+1
+log_queries_not_using_indexes	-- 没有索引的查询是否记录到慢查询日志
+......
+```
 
 ### ==事务==
 
@@ -14,7 +67,7 @@ typora-root-url: /assets
 - 脏读
 - 不可重复读
 - 幻读
-   幻读与不可重复读的区别：不可重复读侧重是对同一条数据的修改导致，幻读是新增/删除数据导致的。锁的范围不一样。
+   **幻读与不可重复读的区别**：不可重复读是对**同一行数据**的前后不一致。幻读是对**不同行数据**的前后不一致。
 
 #### 二、四种隔离级别
 
@@ -25,6 +78,8 @@ typora-root-url: /assets
 - repeatable read-可重复读：
   session2-->start transaction后，与其他事务是隔离状态（幻读）
 - Serializable - 串行化
+
+![image-20200408004145218](/image-20200408004145218.png)
 
 #### 三、问题记录
 
@@ -48,22 +103,6 @@ start transaction ;
 
 ### ==mysqldumpslow==
 
-#### 1. 相关查询：
-``` sql
-slow_query_log		#慢查询开关
-slow_query_log_file #慢查询文件位置
-long_query_time 	#单位秒，超过这个时间则记录，且slow_queries+1
-slow_launch_time 	#创建线程的阈值,且Slow_launch_threads(慢建立线程数)+1
-
--- 没有索引的查询是否记录到慢查询日志
-show variables like '%log_queries_not_using_indexes%';
-
--- 查看表索引
-SHOW INDEX FROM dpb_froze;
-show keys from app_rule;
--- 看库的所有索引
-SELECT * FROM information_schema.STATISTICS WHERE table_schema='cbs_uat_cug2';
-```
 ---
 #### 2. mysql-slow.log文件内容：
 
@@ -279,7 +318,7 @@ key_len计算规则如下：
 
 1. ==**distinct**==：用到了distinct，表示：一旦mysql找到了与行相联合匹配的行，就不再搜索了。
 
-2. ==**Using index**==：**高效**，使用了索引表即获得了想要的结果，无需访问表数据文件，即**==索引覆盖==**。
+2. ==**Using index**==：**相当高效**，使用了索引表即获得了想要的结果，无需访问表数据文件，即**==索引覆盖==**。
 
    例如：select list 中的内容都为所用索引中的字段。
 
@@ -343,11 +382,25 @@ left join:先加载左表，**左表外循环**出每条数据，到**右表（�
 
 口诀：![image-20200407010115365](/image-20200407010115365.png)
 
+---
+
+### ==Mysql锁==
+
+锁：是协调多个进程/线程并发访问**同一个资源**的机制
+
+
+
+读锁会阻塞写，但不会阻塞读。写锁会把读和写都阻塞。
+
+
+
+innodb行锁变表锁？为什么？mysql8还有这么智障吗？
 
 
 
 
 
+间隙锁？
 
 
 

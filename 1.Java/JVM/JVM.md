@@ -1,5 +1,5 @@
 ---
-	typora-copy-images-to: ../assets
+typora-copy-images-to: ../assets
 typora-root-url: ../assets
 ---
 
