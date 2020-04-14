@@ -3,9 +3,9 @@ typora-copy-images-to: /assets
 typora-root-url: /assets
 ---
 
-### ==mysql高级语法==
+### ==高级语法==
 
-#### help
+#### 1. help
 
 ```sql
 help 关键字...
@@ -17,7 +17,7 @@ help select
 ......
 ```
 
-#### show
+#### 2. show
 
 `help show`：查看show的所有用法。show指令的参数繁多，以下罗列几种常用的，[具体上网查询](https://www.cnblogs.com/saneri/p/6963583.html)。
 
@@ -36,7 +36,7 @@ eg:
 -- 表锁相关
 table_locks_immediate	-- 立即获得表锁的次数
 table_locks_waited		-- 不能立即获得表锁的次数，即锁等待，该值高表示性能有问题！
--- 行锁相关
+-- innodb行锁相关
 innodb_row_lock_time	--等待总时长
 innodb_row_lock_time_avg--等待平均时长
 innodb_row_lock_waits	--等待总次数
@@ -61,61 +61,95 @@ log_queries_not_using_indexes	-- 没有索引的查询是否记录到慢查询�
 修改变量：
 
 1. set [session] xxx;	-- 只在当前会话生效
-2. set global xxx;		-- 全局生效，但在设置之前打开的会话不生效，重启mysql后失效。
+2. set global xxx;		-- 全局生效，但在设置之前打开的会话不生效，重启mysql后失效。**有些变量非全局,则不能添加global**。
 
 3. 修改配置文件          -- 重启后生效。
 
 结论：若想修改服务器变量但当下又不想重启服务，可以通过set global,同时应修改配置文件，避免重启后失效。
 
+#### 3. [load data infile](https://www.cnblogs.com/kiwi/archive/2012/11/29/2794124.html) 
 
-
-### ==事务==
-
-#### 一、四个问题
-
-- 更新丢失
-   非事务控制相关的问题，是锁相关的问题
-- 脏读
-- 不可重复读
-- 幻读
-   **幻读与不可重复读的区别**：不可重复读是对**同一行数据**的前后不一致。幻读是对**不同行数据**的前后不一致。
-
-#### 二、四种隔离级别
-
-- read umcommitted-读未提交：
-  session2 可以读到 session1 未提交的事务(脏读、不可重复读、幻读)；
-- read committed- 读已提交:
-  session2 不可以读到session1未提交的事务，但可能会因为session1提交后，导致出现读取的数据不一致（不可重复读、幻读）；
-- repeatable read-可重复读：
-  session2-->start transaction后，与其他事务是隔离状态（幻读）
-- Serializable - 串行化
-
-![image-20200408004145218](/image-20200408004145218.png)
-
-#### 三、问题记录
-
-1.事务自动提交，导致事务不起作用？
-
-查看数据库配置：
-
-![image-20200320155136770](/image-20200320155136770.png)
-
-可以看到autocommit是ON,
-注：多数生产环境都必须配置为ON。
-此时可以手动开启事务：
+> insert和mysql（执行文件）都可以插入数据，但本质都是执行sql。当==**大批量插入**==时使用load更快。load加载的文件里只有数据，没有sql命令。
 
 ```sql
-start transaction ;
+load data  [low_priority] [local] infile 'file_name.tsv'   [replace | ignore]   into table tbl_name
+[fields  [terminated by'\t']   [ [OPTIONALLY]  enclosed by '']  [escaped by'\\' ]  ]
+[lines   terminated by'\n']
+[ignore number lines]
+[(col_name, )]
+
+low_priority:	降低优先级，等读共享锁无使用时，才进行写
+local：	文件在客户端，不在数据库的服务器上https://www.iteye.com/blog/tangmingjie2009-889925
+replace和ignore：控制唯一键重复处理。replace替换，ignore跳过
+fields：指定了文件每行字段格式
+	terminated by	描述字段间的分隔符，默认情况下是tab字符（\t）
+	[OPTIONALLY] enclosed by	描述的是字段的括起字符(eg: enclosed by '"' 即"xxx"，一般不指定),OPTIONALLY表示，只对char/varchar/text等等这些加enclose by字符
+	escaped by		描述的转义字符。默认的是反斜杠
+	默认效果：fields terminated by'\t' enclosed by '' escaped by'\\'
+lines:指定了行与行之间关系
+	默认效果：lines terminated by'\n'
+ignore number lines:忽略前几行，通常用来忽略首行字段名
 ```
 
----
+==需要注意的问题：==
 
+1. 权限问题：other用户+r
 
+2. local问题：https://www.iteye.com/blog/tangmingjie2009-889925
 
-### ==mysqldumpslow==
+3. **secure-file-priv**的值三种情况：
 
----
-#### 日志内容
+   ```sql
+   null	-- 禁止导入导出
+   /xx/xx/	--表示只允许导入导出该目录下文件（PS：测试子目录也不行）
+   空		--不限制导入导出
+   ```
+
+4. ==空值问题==：==字段中的空值用**\N**表示==
+
+   - select... into outfile默认导出为\N
+
+   - 用DataGrip导出数据
+     <img src="/image-20200414162531977.png" alt="image-20200414162531977" style="zoom:50%;" />
+
+5. ==字段中存在换行==:
+
+   - 导出文件时定义字段括起符和换行符：fields enclosed by '"' lines terminated by 'XFuckX'
+     即：用双引号阔起字段值，用XFuckX作为换行标志符。导入时也同样如此。
+     可以用select...into outfile 或者 DataGrip（DataGrip的这个功能完全等价于select...into outfile）
+     <img src="/image-20200414180011316.png" alt="image-20200414180011316" style="zoom: 67%;" />
+
+   
+
+#### 4. select ... into outfile
+
+`select... into outfile 'file_name' [Fields... lines...]`
+
+是与load data 对应的逆操作。两个命令的FIELDS和LINES子句的语法是相同的.
+select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
+
+### ==命令==
+
+**以下命令无法详细记录，只能在平时遇到一些特殊场景做登记。**
+
+#### 1.  mysql
+
+```sql
+-- 把SQL查询结果导出到tsv文件(用的少，等于select...into outfile少了登录一步，但功能单一)
+mysql -uroot -p -P3306 -hlocalhost -B -e "select * from film_text" test > 8.tsv
+-B: 指定数据库
+-e: 指定sql
+```
+
+#### 2. mysqldump
+
+`mysqldump [options] > dump.sql`
+但可能用户权限受限，所以可用第三方软件（DataGrip...），导出的是**sql格式**的。
+
+[参数详解](https://www.cnblogs.com/flagsky/p/9762726.html)
+
+#### 3. ==mysqldumpslow==
+##### 3.1 日志内容
 
 **注**：**DML**语句也会记录到日志中
 
@@ -126,9 +160,8 @@ start transaction ;
 SET timestamp=1496472507; 
 select * from z_order limit 100000;
 ```
----
 
-#### 使用
+##### 3.2 使用
 
 ```shell
  mysqldumpslow --help  # 查看参数
@@ -164,7 +197,7 @@ mysqldumpslow -s r -t 10 /database/mysql/mysql06_slow.log
 mysqldumpslow -s c -t 10 /database/mysql/mysql06_slow.log
 ```
 
-#### 执行结果
+##### 3.3 执行结果
 
 ````sql
 Reading mysql slow query log from mysql-slow.log
@@ -173,213 +206,58 @@ Count: 2  Time=3.64s (17s)  Lock=0.00s (0s)  Rows=100000.0 (200000), root[root]@
 
 Count: 2  Time=1.05s (200s)  Lock=0.00s (0s)  Rows=55000.0 (110000), root[root]@localhost
   select * from z_order limit N
-​```
+```
 - Count：出现次数,
 - Time：执行最长时间  和  执行总时间
 - Lock：等待锁的最长时间 和  等待锁总时间
 - Rows：单次查询返回的平均行数(累计返回的总行数≈count*单次查询返回的平均行数)
-````
 
----
+### ==事务==
 
-### ==pt-query-digest==
+#### 1. 四个问题
 
-#### 简介
+- 更新丢失
+   非事务控制相关的问题，是锁相关的问题
+- 脏读
+- 不可重复读
+- 幻读
+   **幻读与不可重复读的区别**：不可重复读是对**同一行数据**的前后不一致。幻读是对**不同行数据**的前后不一致。
 
-**Percona Toolkit**是由**Percona**开发的高级**开源**命令行工具的集合，pt-query-digest属于**Percona Toolkit**中其中一款工具。
-pt-query-digest可以分析binlog、General log、slowlog，也可以通过SHOWPROCESSLIST或者通过tcpdump抓取的MySQL协议数据来进行分析。
+#### 2. 四种隔离级别
 
-#### 安装
+- read umcommitted-读未提交：
+  session2 可以读到 session1 未提交的事务(脏读、不可重复读、幻读)；
+- read committed- 读已提交:
+  session2 不可以读到session1未提交的事务，但可能会因为session1提交后，导致出现读取的数据不一致（不可重复读、幻读）；
+- repeatable read-可重复读：
+  session2-->start transaction后，与其他事务是隔离状态（幻读）
+- Serializable - 串行化
 
-可单独安装pt-query-digest，或安装percona-toolkit全套工具。需要perl模块支持。
+![image-20200408004145218](/image-20200408004145218.png)
 
-#### 使用
+#### 3. 问题记录
 
-**SYNOPSIS**：`pt-query-digest [OPTIONS] [FILES] [DSN]`，具体参数直接百度
+1.事务自动提交，导致事务不起作用？
 
-**示例：**
+查看数据库配置：
 
-**1.直接分析慢查询文件:**
+![image-20200320155136770](/image-20200320155136770.png)
 
-```sh
-pt-query-digest slow.log > slow_report.log
-```
-
-**2.分析最近12小时内的查询：**
-
-==--since== : 指定起始时间，12h表示从12小时前，或指定时间'2017-01-07 09:30:00'
-
-```shell
-pt-query-digest --since=12h slow.log > slow_report2.log
-```
-
-**3.分析指定时间范围内的查询：**
-
-==--unitl== :截止时间
-
-```shell
-pt-query-digest slow.log --since '2017-01-07 09:30:00' --until '2017-01-07 10:00:00'> > slow_report3.log
-```
-
-**4.分析指含有select语句的慢查询**
-
-==--filter==：按指定的[字符串](http://www.php.cn/wiki/57.html)进行匹配过滤后再进行分析。关于--filter的细则，可查看[使用手册](F:\CodeDaily\3.数据库\Percona_Toolkit_3.1.0使用手册.pdf)
-
-```shell
-pt-query-digest --filter '$event->{fingerprint} =~ m/^select/i' slow.log> slow_report4.log
-```
-
-**5.针对某个用户的慢查询**
-
-```shell
-pt-query-digest --filter '($event->{user} || "") =~ m/^root/i' slow.log> slow_report5.log
-```
-
-**6.查询所有所有的全表扫描或full join的慢查询**
-
-```shell
-pt-query-digest --filter '(($event->{Full_scan} || "") eq "yes") ||(($event->{Full_join} || "") eq "yes")' slow.log> slow_report6.log
-```
-
-**7.把查询保存到query_review表**
-
-==--review==：将分析结果保存到表中，这个分析只是对查询条件进行参数化，一个类型的查询一条记录，比较简单。当下次使用--review时，如果存在相同的语句分析，就不会记录到数据表中。
-==--create-review-table==：当使用--review参数把分析结果输出到表中时，如果没有表就自动创建。
-
-```shell
-pt-query-digest --user=root --password=root --review h=localhost,D=slowdb,t=query_review --create-review-table slow.log
-```
-
-**8.把查询保存到query_history表**
-
-==--history== ：将分析结果保存到表中，分析结果比较详细，下次再使用--history时，如果存在相同的语句，且查询所在的时间区间和历史表中的不同，则会记录到数据表中，可以通过查询同个**CHECKSUM**来比较某类型查询的历史变化。
-==--create-history-table== 当使用--history参数把分析结果输出到表中时，如果没有表就自动创建。
-
-```shell
-pt-query-digest --user=root --password=root --history h=localhost,D=slowdb,t=query_review_history --create-history-table slow.log_0002
-```
-
-**9.通过tcpdump抓取mysql的tcp协议数据，然后再分析**
-
-```shell
-tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 > mysql.tcp.txt``pt-query-digest --type tcpdump mysql.tcp.txt> slow_report9.log
-```
-
-**10.分析binlog**
-
-```shell
-mysqlbinlog mysql-bin.000093 > mysql-bin000093.sql``pt-query-digest --type=binlog mysql-bin000093.sql > slow_report10.log
-```
-
-**11.分析general log**
-
-```shell
-pt-query-digest --type=genlog localhost.log > slow_report11.log
-```
-
-#### 执行结果
-
-> 可分为三部分查看：总体--分组统计--每组详情
-
-**第一部分：总体统计结果**
+可以看到autocommit是ON,
+注：多数生产环境都必须配置为ON。
+此时可以手动开启事务：
 
 ```sql
-# 100.3s user time, 2.6s system time, 59.05M rss, 251.50M vsz
-# Current date: Sat Apr 11 20:38:34 2020
-# Hostname: localhost.localdomain
-# Files: ./slow/mysql_slow.log_00_aa
--- sql总数量，唯一的语句数量，QPS，并发数
-# Overall: 509.03k total, 310 unique, 1.20 QPS, 0.45x concurrency ________
--- unique：表示对查询条件进行参数化以后，总共有多少个不同的查询。
-# Time range: 2019-12-05T05:05:57 to 2019-12-10T03:00:21
-# Attribute          total     min     max     avg     95%  stddev  median
-# ============     ======= ======= ======= ======= ======= ======= =======
-# Exec time        190691s    67us   2823s   375ms     8ms     17s   287us
-# Lock time         54328s       0   2300s   107ms   204us     11s    89us
-# Rows sent          1.38G       0  22.89M   2.84k    0.99 182.53k       0
-# Rows examine       2.26G       0  22.89M   4.65k   7.68k 189.45k  143.84
-# Query size       163.08M       6   9.58k  335.94  463.90  173.18  400.73
--- Exec time语句执行时间;	Lock time 锁占用时间;
--- Rows sent发送到客户端的行数;	Rows examine扫描行数; Query size 查询大小
--- Exec time->95% 表示：有95%sql的执行时间小于8ms
-```
-
-**第二部分：分组统计结果**
-
-```sql
-# Profile
-# Rank Query ID                  Response time    Calls  R/Call    V/M   I
-# ==== ========================= ================ ====== ========= ===== =
-#    1 0xE3C753C2F267B2D767A3... 71016.6935 37.2%   9936    7.1474 65... SELECT aps_packet_?
-#    2 0x245FEB4272D98518DFE8... 26920.8060 14.1%    835   32.2405 57.14 UPDATE ksys_service_notify
-#    3 0xFFFCA4D67EA0A7888130... 20960.6889 11.0%    231   90.7389 12... COMMIT
-#    4 0x63AFE254C13E96BEBCF8... 20383.4016 10.7%     39  522.6513 88... SELECT
-
--- Rank          排名
--- Query ID      查询识别码
--- Response time 某类查询总响应时间，和百分比
--- Calls         总次数
--- R/Call        平均响应时间 = Response/Calls = 总响应时间/总次数
--- V/M           响应时间Variance-to-mean的比率???
--- Item          提取的具体查询
-```
-
-**第三部分：每组详细统计结果**
-
-```sql
-# Query 1: 0.03 QPS, 0.20x concurrency, ID 0xE3C753C2F267B2D767A347A2812914DF at byte 70971444
--- Query 就是第二部分的Rank排名
--- ID 也是第二部分的ID
-# This item is included in the report because it matches --limit.
-# Scores: V/M = 650.11
-# Time range: 2019-12-05T17:00:14 to 2019-12-09T20:04:46
--- pct:该组查询占整体的百分比，total/total=9936/509.03k≈1.9%
-# Attribute    pct   total     min     max     avg     95%  stddev  median
-# ============ === ======= ======= ======= ======= ======= ======= =======
-# Count          1    9936
-# Exec time     37  71017s    67us   2230s      7s      4s     68s    23ms
-# Lock time      0    343s       0    127s    34ms       0      2s       0
-# Rows sent     99   1.38G       0  22.89M 145.33k  51.46k   1.27M    2.90
-# Rows examine  61   1.38G       0  22.89M 145.33k  51.46k   1.27M    2.90
-# Query size     0 549.94k      43      93   56.68   65.89    6.02   54.21
-# String:
-# Databases    cbs_uat_cu... (2415/24%), cbs_uat (2400/24%)... 15 more
-# Hosts        localhost
-# Users        mydbasql (9455/95%), los (481/4%)-- 各个用户执行的次数（占比）
-# Query_time distribution	-- 查询时间分布
-#   1us
-#  10us  ###
-# 100us  ################################################################
-#   1ms  #################
-#  10ms  ##############################################################
-# 100ms  #############################################
-#    1s  #########
-#  10s+  ########
-# Tables
-#    SHOW TABLE STATUS FROM `cbs_uat_cug2` LIKE 'aps_packet_20191014'\G
-#    SHOW CREATE TABLE `cbs_uat_cug2`.`aps_packet_20191014`\G
-SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
-# Converted for EXPLAIN
-# EXPLAIN /*!50100 PARTITIONS*/
-SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
+start transaction ;
 ```
 
 ---
-
-### ==SQLAdvisor==
-
-[美团开源项目](https://github.com/Meituan-Dianping/SQLAdvisor)，索引优化建议。[sqladvisor-web](https://github.com/zyw/sqladvisor-web)提供了web界面操作	
-
-```shell
-sqladvisor --help
-sqladvisor -h xx  -P xx  -u xx -p 'xx' -d xx -q "sql" -v 1
-```
 
 
 
 ---
 
-### ==Explain==
+### ==索引/Explain==
 
 **重点**：explain可以模拟服务层中的Query Optimizer来查看==**Mysql执行计划**==，**也即执行阶段，非Query Optimizer分解sql进行优化的阶段！**所以，Explain显示的是执行计划。
 
@@ -605,11 +483,22 @@ in （subquery），如果这个subquery查出的数据量很小就用in。否�
 
 ##### 4. order by优化
 
+##### 5. 大批量insert优化
+
+1. 用load代替mysql/insert.
+   用select ... into outfile或DataGrip导出数据
+
+   ```sql
+   select * from mss_packet into outfile '/var/lib/mysql-files/mss_packet.tsv.bak' fields terminated by '\t' enclosed by '"' lines terminated by 'fuck';
+   
+   load data infile '/var/lib/mysql-files/mss_packet.tsv.bak' into table mss_packet fields terminated by '\t' enclosed by '"' lines terminated by 'fuck';
+   ```
+
 ---
 
-### ==Mysql锁==
+### ==锁==
 
-锁：是协调多个进程/线程并发访问**同一个资源**的机制
+锁：是计算机协调多个进程/线程并发访问**同一个资源**的机制.
 
 
 
@@ -626,4 +515,199 @@ innodb行锁变表锁？为什么？mysql8还有这么智障吗？
 间隙锁？
 
 
+
+### ==开源工具==
+
+#### ==pt-query-digest==
+
+##### 简介
+
+**Percona Toolkit**是由**Percona**开发的高级**开源**命令行工具的集合，pt-query-digest属于**Percona Toolkit**中其中一款工具。
+pt-query-digest可以分析binlog、General log、slowlog，也可以通过SHOWPROCESSLIST或者通过tcpdump抓取的MySQL协议数据来进行分析。
+
+##### 安装
+
+可单独安装pt-query-digest，或安装percona-toolkit全套工具。需要perl模块支持。
+
+##### 使用
+
+**SYNOPSIS**：`pt-query-digest [OPTIONS] [FILES] [DSN]`，具体参数直接百度
+
+**示例：**
+
+**1.直接分析慢查询文件:**
+
+```sh
+pt-query-digest slow.log > slow_report.log
+```
+
+**2.分析最近12小时内的查询：**
+
+==--since== : 指定起始时间，12h表示从12小时前，或指定时间'2017-01-07 09:30:00'
+
+```shell
+pt-query-digest --since=12h slow.log > slow_report2.log
+```
+
+**3.分析指定时间范围内的查询：**
+
+==--unitl== :截止时间
+
+```shell
+pt-query-digest slow.log --since '2017-01-07 09:30:00' --until '2017-01-07 10:00:00'> > slow_report3.log
+```
+
+**4.分析指含有select语句的慢查询**
+
+==--filter==：按指定的[字符串](http://www.php.cn/wiki/57.html)进行匹配过滤后再进行分析。关于--filter的细则，可查看[使用手册](F:\CodeDaily\3.数据库\Percona_Toolkit_3.1.0使用手册.pdf)
+
+```shell
+pt-query-digest --filter '$event->{fingerprint} =~ m/^select/i' slow.log> slow_report4.log
+```
+
+**5.针对某个用户的慢查询**
+
+```shell
+pt-query-digest --filter '($event->{user} || "") =~ m/^root/i' slow.log> slow_report5.log
+```
+
+**6.查询所有所有的全表扫描或full join的慢查询**
+
+```shell
+pt-query-digest --filter '(($event->{Full_scan} || "") eq "yes") ||(($event->{Full_join} || "") eq "yes")' slow.log> slow_report6.log
+```
+
+**7.把查询保存到query_review表**
+
+==--review==：将分析结果保存到表中，这个分析只是对查询条件进行参数化，一个类型的查询一条记录，比较简单。当下次使用--review时，如果存在相同的语句分析，就不会记录到数据表中。
+==--create-review-table==：当使用--review参数把分析结果输出到表中时，如果没有表就自动创建。
+
+```shell
+pt-query-digest --user=root --password=root --review h=localhost,D=slowdb,t=query_review --create-review-table slow.log
+```
+
+**8.把查询保存到query_history表**
+
+==--history== ：将分析结果保存到表中，分析结果比较详细，下次再使用--history时，如果存在相同的语句，且查询所在的时间区间和历史表中的不同，则会记录到数据表中，可以通过查询同个**CHECKSUM**来比较某类型查询的历史变化。
+==--create-history-table== 当使用--history参数把分析结果输出到表中时，如果没有表就自动创建。
+
+```shell
+pt-query-digest --user=root --password=root --history h=localhost,D=slowdb,t=query_review_history --create-history-table slow.log_0002
+```
+
+**9.通过tcpdump抓取mysql的tcp协议数据，然后再分析**
+
+```shell
+tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 > mysql.tcp.txt``pt-query-digest --type tcpdump mysql.tcp.txt> slow_report9.log
+```
+
+**10.分析binlog**
+
+```shell
+mysqlbinlog mysql-bin.000093 > mysql-bin000093.sql``pt-query-digest --type=binlog mysql-bin000093.sql > slow_report10.log
+```
+
+**11.分析general log**
+
+```shell
+pt-query-digest --type=genlog localhost.log > slow_report11.log
+```
+
+##### 执行结果
+
+> 可分为三部分查看：总体--分组统计--每组详情
+
+**第一部分：总体统计结果**
+
+```sql
+# 100.3s user time, 2.6s system time, 59.05M rss, 251.50M vsz
+# Current date: Sat Apr 11 20:38:34 2020
+# Hostname: localhost.localdomain
+# Files: ./slow/mysql_slow.log_00_aa
+-- sql总数量，唯一的语句数量，QPS，并发数
+# Overall: 509.03k total, 310 unique, 1.20 QPS, 0.45x concurrency ________
+-- unique：表示对查询条件进行参数化以后，总共有多少个不同的查询。
+# Time range: 2019-12-05T05:05:57 to 2019-12-10T03:00:21
+# Attribute          total     min     max     avg     95%  stddev  median
+# ============     ======= ======= ======= ======= ======= ======= =======
+# Exec time        190691s    67us   2823s   375ms     8ms     17s   287us
+# Lock time         54328s       0   2300s   107ms   204us     11s    89us
+# Rows sent          1.38G       0  22.89M   2.84k    0.99 182.53k       0
+# Rows examine       2.26G       0  22.89M   4.65k   7.68k 189.45k  143.84
+# Query size       163.08M       6   9.58k  335.94  463.90  173.18  400.73
+-- Exec time语句执行时间;	Lock time 锁占用时间;
+-- Rows sent发送到客户端的行数;	Rows examine扫描行数; Query size 查询大小
+-- Exec time->95% 表示：有95%sql的执行时间小于8ms
+```
+
+**第二部分：分组统计结果**
+
+```sql
+# Profile
+# Rank Query ID                  Response time    Calls  R/Call    V/M   I
+# ==== ========================= ================ ====== ========= ===== =
+#    1 0xE3C753C2F267B2D767A3... 71016.6935 37.2%   9936    7.1474 65... SELECT aps_packet_?
+#    2 0x245FEB4272D98518DFE8... 26920.8060 14.1%    835   32.2405 57.14 UPDATE ksys_service_notify
+#    3 0xFFFCA4D67EA0A7888130... 20960.6889 11.0%    231   90.7389 12... COMMIT
+#    4 0x63AFE254C13E96BEBCF8... 20383.4016 10.7%     39  522.6513 88... SELECT
+
+-- Rank          排名
+-- Query ID      查询识别码
+-- Response time 某类查询总响应时间，和百分比
+-- Calls         总次数
+-- R/Call        平均响应时间 = Response/Calls = 总响应时间/总次数
+-- V/M           响应时间Variance-to-mean的比率???
+-- Item          提取的具体查询
+```
+
+**第三部分：每组详细统计结果**
+
+```sql
+# Query 1: 0.03 QPS, 0.20x concurrency, ID 0xE3C753C2F267B2D767A347A2812914DF at byte 70971444
+-- Query 就是第二部分的Rank排名
+-- ID 也是第二部分的ID
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 650.11
+# Time range: 2019-12-05T17:00:14 to 2019-12-09T20:04:46
+-- pct:该组查询占整体的百分比，total/total=9936/509.03k≈1.9%
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count          1    9936
+# Exec time     37  71017s    67us   2230s      7s      4s     68s    23ms
+# Lock time      0    343s       0    127s    34ms       0      2s       0
+# Rows sent     99   1.38G       0  22.89M 145.33k  51.46k   1.27M    2.90
+# Rows examine  61   1.38G       0  22.89M 145.33k  51.46k   1.27M    2.90
+# Query size     0 549.94k      43      93   56.68   65.89    6.02   54.21
+# String:
+# Databases    cbs_uat_cu... (2415/24%), cbs_uat (2400/24%)... 15 more
+# Hosts        localhost
+# Users        mydbasql (9455/95%), los (481/4%)-- 各个用户执行的次数（占比）
+# Query_time distribution	-- 查询时间分布
+#   1us
+#  10us  ###
+# 100us  ################################################################
+#   1ms  #################
+#  10ms  ##############################################################
+# 100ms  #############################################
+#    1s  #########
+#  10s+  ########
+# Tables
+#    SHOW TABLE STATUS FROM `cbs_uat_cug2` LIKE 'aps_packet_20191014'\G
+#    SHOW CREATE TABLE `cbs_uat_cug2`.`aps_packet_20191014`\G
+SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
+# Converted for EXPLAIN
+# EXPLAIN /*!50100 PARTITIONS*/
+SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
+```
+
+---
+
+#### ==SQLAdvisor==
+
+[美团开源项目](https://github.com/Meituan-Dianping/SQLAdvisor)，索引优化建议。[sqladvisor-web](https://github.com/zyw/sqladvisor-web)提供了web界面操作	
+
+```shell
+sqladvisor --help
+sqladvisor -h xx  -P xx  -u xx -p 'xx' -d xx -q "sql" -v 1
+```
 
