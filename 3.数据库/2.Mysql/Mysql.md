@@ -1,6 +1,6 @@
 ---
-typora-copy-images-to: /assets
-typora-root-url: /assets
+typora-copy-images-to: ../assets
+typora-root-url: ../assets
 ---
 
 ### ==高级语法==
@@ -27,7 +27,7 @@ help select
 help show status
 Syntax:
 	SHOW [GLOBAL | SESSION] STATUS [LIKE 'pattern' | WHERE expr]
--- 常用like，where不常用where variable_name='xxx%';共有400+个值
+-- 常用like，where不常用where variable_name='%xxx%';共有400+个值
 ```
 
 eg:
@@ -79,7 +79,7 @@ load data  [low_priority] [local] infile 'file_name.tsv'   [replace | ignore]   
 [(col_name, )]
 
 low_priority:	降低优先级，等读共享锁无使用时，才进行写
-local：	文件在客户端，不在数据库的服务器上https://www.iteye.com/blog/tangmingjie2009-889925
+local：	文件在客户端，不在数据库的服务器上.如果是在windows上路径需加转义符。https://www.iteye.com/blog/tangmingjie2009-889925
 replace和ignore：控制唯一键重复处理。replace替换，ignore跳过
 fields：指定了文件每行字段格式
 	terminated by	描述字段间的分隔符，默认情况下是tab字符（\t）
@@ -97,7 +97,8 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 
 2. local问题：https://www.iteye.com/blog/tangmingjie2009-889925
 
-3. **secure-file-priv**的值三种情况：
+3. **secure-file-priv**：用来限制LOAD DATA, SELECT ... OUTFILE, and LOAD_FILE()传到哪个指定目录的。
+   三种值：
 
    ```sql
    null	-- 禁止导入导出
@@ -108,8 +109,7 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 4. ==空值问题==：==字段中的空值用**\N**表示==
 
    - select... into outfile默认导出为\N
-
-   - 用DataGrip导出数据
+- 用DataGrip导出数据
      <img src="/image-20200414162531977.png" alt="image-20200414162531977" style="zoom:50%;" />
 
 5. ==字段中存在换行==:
@@ -124,9 +124,12 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 #### 4. select ... into outfile
 
 `select... into outfile 'file_name' [Fields... lines...]`
+语法：两个命令的FIELDS和LINES子句的语法是相同的.
 
-是与load data 对应的逆操作。两个命令的FIELDS和LINES子句的语法是相同的.
-select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
+1. ==select...into outfile只能导出到mysql所在的服务器，并且需要具备写的权限，如果secure_file_priv有限制，则需要服从限制。针对此情况，可是用DataGrip==
+2. 是与load data 对应的逆操作。
+3. select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
+4. 字段terminated和line的terminated最好可以取一些特殊符号，比如fuck。字段之间取逗号或者tab都有风险，视情况而定。
 
 ### ==命令==
 
@@ -323,7 +326,7 @@ start transaction ;
 
    	![image-20200331192922620](/image-20200331192922620.png)
 
-##### 4. type-访问类型
+##### ==4. type-访问类型==
 
 **从好到差**：system > const > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > ALL。以及特殊：**null**
 可能会因为一些原因，访问类型比预期要低，但一般不会高于预期。
@@ -363,14 +366,14 @@ start transaction ;
 
 9. ==**ALL**==：全表扫描！！！(如果是数据量很大的表中出现这个，基本上必须**优化**)
 
-##### 5. possible_keys-可能用到的索引
+##### 5. possible_keys
 
-##### 6. key-用到的索引
+##### ==6. key==
 
 ​	**force index(inx_name)**：可强制使用指定索引
 ​	**ignore index(inx_name)**：可强制不使用指定索引
 
-##### 7. key_len-索引里使用的字节数
+##### 7. key_len
 
 ​	作用：通过这个值可以算出具体使用了索引中的哪些列，可助于**==定位索引失效部分==**，方法如下：
 ​	查看所用索引key，计算或者写一条使用到索引全字段的sql，计算出全索引的len值。再计算所用到的部分。[链接](https://blog.csdn.net/fdipzone/article/details/55804684)
@@ -404,7 +407,7 @@ key_len计算规则如下：
 
 预计扫描多少行
 
-##### 10. extra-额外信息
+##### ==10. extra==
 
 1. ==**distinct**==：用到了distinct，表示：一旦mysql找到了与行相联合匹配的行，就不再搜索了。
 
@@ -500,17 +503,9 @@ in （subquery），如果这个subquery查出的数据量很小就用in。否�
 
 锁：是计算机协调多个进程/线程并发访问**同一个资源**的机制.
 
-
-
 读锁会阻塞写，但不会阻塞读。写锁会把读和写都阻塞。
 
-
-
 innodb行锁变表锁？为什么？mysql8还有这么智障吗？
-
-
-
-
 
 间隙锁？
 
@@ -598,13 +593,15 @@ pt-query-digest --user=root --password=root --history h=localhost,D=slowdb,t=que
 **9.通过tcpdump抓取mysql的tcp协议数据，然后再分析**
 
 ```shell
-tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 > mysql.tcp.txt``pt-query-digest --type tcpdump mysql.tcp.txt> slow_report9.log
+tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 > mysql.tcp.txt 
+pt-query-digest --type tcpdump mysql.tcp.txt> slow_report9.log
 ```
 
 **10.分析binlog**
 
 ```shell
-mysqlbinlog mysql-bin.000093 > mysql-bin000093.sql``pt-query-digest --type=binlog mysql-bin000093.sql > slow_report10.log
+mysqlbinlog mysql-bin.000093 > mysql-bin000093.sql
+pt-query-digest --type=binlog mysql-bin000093.sql > slow_report10.log
 ```
 
 **11.分析general log**
@@ -635,9 +632,11 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 # Rows sent          1.38G       0  22.89M   2.84k    0.99 182.53k       0
 # Rows examine       2.26G       0  22.89M   4.65k   7.68k 189.45k  143.84
 # Query size       163.08M       6   9.58k  335.94  463.90  173.18  400.73
--- Exec time语句执行时间;	Lock time 锁占用时间;
--- Rows sent发送到客户端的行数;	Rows examine扫描行数; Query size 查询大小
--- Exec time->95% 表示：有95%sql的执行时间小于8ms
+-- stddev 标准差
+-- median 中位数
+-- Exec time 语句执行时间;	Lock time 锁占用时间;
+-- Rows sent 发送到客户端的行数;	Rows examine 扫描行数; Query size 查询大小
+-- 95%表示其中95%，eg:Exec time->95% 表示：有95%sql的平均执行时间=8ms
 ```
 
 **第二部分：分组统计结果**
@@ -679,7 +678,7 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 # Rows examine  61   1.38G       0  22.89M 145.33k  51.46k   1.27M    2.90
 # Query size     0 549.94k      43      93   56.68   65.89    6.02   54.21
 # String:
-# Databases    cbs_uat_cu... (2415/24%), cbs_uat (2400/24%)... 15 more
+# Databases    cbs_uat_cu... (2415/24%), cbs_uat (2400/24%)... 15 more-- 各数据库的次数（占比）
 # Hosts        localhost
 # Users        mydbasql (9455/95%), los (481/4%)-- 各个用户执行的次数（占比）
 # Query_time distribution	-- 查询时间分布
@@ -709,5 +708,11 @@ SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
 ```shell
 sqladvisor --help
 sqladvisor -h xx  -P xx  -u xx -p 'xx' -d xx -q "sql" -v 1
+sqladvisor -f sqladvisor.cnf -v 1
 ```
 
+##### ==**优化过程备忘**：==
+
+1. pt-query-digest分析slow.log到本地表
+2. 支持远程，则sqladvisor直接执行，初步得到结果，但如果需要修改测试的话，还是需要复制到本地库。
+3. 不支持远程，则复制数据到本地库。数据量大则用select...into outfile + load data infile.
