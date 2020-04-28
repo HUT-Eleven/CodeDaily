@@ -91,6 +91,11 @@ Java诞生初期，C/C++横行，java必须调用C/C++的程序。而这些==本
 
 <img src="/image-20200322122359477.png" alt="image-20200322122359477" style="zoom: 50%;" />
 
+7. 栈内存中的引用传递
+   <img src="/image-20200422021930110.png" alt="image-20200422021930110" style="zoom:50%;" />
+
+   <img src="/image-20200423001233469.png" alt="image-20200423001233469" style="zoom:50%;" />
+
 ---
 ### 方法区
 
