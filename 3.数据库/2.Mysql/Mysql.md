@@ -81,7 +81,7 @@ load data  [low_priority] [local] infile 'file_name.tsv'   [replace | ignore]   
 low_priority:	降低优先级，等读共享锁无使用时，才进行写
 local：	文件在客户端，不在数据库的服务器上.如果是在windows上路径需加转义符。https://www.iteye.com/blog/tangmingjie2009-889925
 replace和ignore：控制唯一键重复处理。replace替换，ignore跳过
-fields：指定了文件每行字段格式
+fields：指定了每行数据字段之间的关系
 	terminated by	描述字段间的分隔符，默认情况下是tab字符（\t）
 	[OPTIONALLY] enclosed by	描述的是字段的括起字符(eg: enclosed by '"' 即"xxx"，一般不指定),OPTIONALLY表示，只对char/varchar/text等等这些加enclose by字符
 	escaped by		描述的转义字符。默认的是反斜杠
@@ -90,6 +90,16 @@ lines:指定了行与行之间关系
 	默认效果：lines terminated by'\n'
 ignore number lines:忽略前几行，通常用来忽略首行字段名
 ```
+
+#### 4. select ... into outfile
+
+`select... into outfile 'file_name' [Fields... lines...]`
+语法：两个命令的FIELDS和LINES子句的语法是相同的.
+
+1. ==select...into outfile只能导出到mysql所在的服务器，并且需要具备写的权限，如果secure_file_priv有限制，则需要服从限制。针对此情况，可以用DataGrip==
+2. 是与load data 对应的逆操作。
+3. select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
+4. 字段terminated和line的terminated最好可以取一些特殊符号，比如fuck。字段之间取逗号或者tab都有风险，视情况而定。
 
 ==需要注意的问题：==
 
@@ -109,27 +119,17 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 4. ==空值问题==：==字段中的空值用**\N**表示==
 
    - select... into outfile默认导出为\N
-- 用DataGrip导出数据
+   
+   - 用DataGrip导出数据
      <img src="/image-20200414162531977.png" alt="image-20200414162531977" style="zoom:50%;" />
-
+   
 5. ==字段中存在换行==:
 
-   - 导出文件时定义字段括起符和换行符：fields enclosed by '"' lines terminated by 'XFuckX'
+   - 导出文件时定义字段括起符和换行符：fields enclosed by '"' lines terminated by 'Fuck'
      即：用双引号阔起字段值，用XFuckX作为换行标志符。导入时也同样如此。
      可以用select...into outfile 或者 DataGrip（DataGrip的这个功能完全等价于select...into outfile）
      <img src="/image-20200414180011316.png" alt="image-20200414180011316" style="zoom: 67%;" />
 
-   
-
-#### 4. select ... into outfile
-
-`select... into outfile 'file_name' [Fields... lines...]`
-语法：两个命令的FIELDS和LINES子句的语法是相同的.
-
-1. ==select...into outfile只能导出到mysql所在的服务器，并且需要具备写的权限，如果secure_file_priv有限制，则需要服从限制。针对此情况，可是用DataGrip==
-2. 是与load data 对应的逆操作。
-3. select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
-4. 字段terminated和line的terminated最好可以取一些特殊符号，比如fuck。字段之间取逗号或者tab都有风险，视情况而定。
 
 ### ==命令==
 
@@ -138,7 +138,7 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 #### 1.  mysql
 
 ```sql
--- 把SQL查询结果导出到tsv文件(用的少，等于select...into outfile少了登录一步，但功能单一)
+-- 把SQL查询结果导出到tsv文件(用的少，等价于select...into outfile，但功能单一，不能自定义分隔符等等)
 mysql -uroot -p -P3306 -hlocalhost -B -e "select * from film_text" test > 8.tsv
 -B: 指定数据库
 -e: 指定sql
@@ -262,7 +262,7 @@ start transaction ;
 
 ### ==索引/Explain==
 
-**重点**：explain可以模拟服务层中的Query Optimizer来查看==**Mysql执行计划**==，**也即执行阶段，非Query Optimizer分解sql进行优化的阶段！**所以，Explain显示的是执行计划。
+**重点**：explain可以模拟服务层中的Query Optimizer来查看==Mysql执行计划==，也即**执行阶段**，非Query Optimizer分解sql进行**优化阶段**！
 
 #### 总览图
 
@@ -340,7 +340,7 @@ start transaction ;
 
    ![image-20200401000827664](/image-20200401000827664.png)
 
-3. **==eq_ref==**：相比const/system,  er_ref就是**多表**的情况。primary key 或 unique key索引的所有列被使用 ，最多只会返回一条符合条件的记录。简单而言，就是外循环每次到内循环中遍历数据，都只有一条数据匹配。
+3. **==eq_ref==**：相比const/system,  er_ref就是==**多表**==的情况。primary key 或 unique key索引的所有列被使用 ，最多只会返回一条符合条件的记录。简单而言，就是外循环每次到内循环中遍历数据，都只有一条数据匹配。
 
    ![image-20200401003401450](/image-20200401003401450.png)
 
@@ -470,7 +470,7 @@ key_len计算规则如下：
    ![image-20200407002104935](/image-20200407002104935.png)
    ==**如果非要%xx%或%xx,则可以使用覆盖索引原则解决。即select list中的字段都为索引的字段。==**
 
-口诀：![image-20200407010115365](/image-20200407010115365.png)
+口诀：<img src="/image-20200407010115365.png" alt="image-20200407010115365" style="zoom: 67%;" />
 
 ##### 2. join语句优化：
 
@@ -497,7 +497,35 @@ in （subquery），如果这个subquery查出的数据量很小就用in。否�
    load data infile '/var/lib/mysql-files/mss_packet.tsv.bak' into table mss_packet fields terminated by '\t' enclosed by '"' lines terminated by 'fuck';
    ```
 
----
+##### 6.update...in优化
+
+实战笔记：
+
+```sql
+-- 优化前
+UPDATE dpa_deposit
+SET max_remain_bal = '50000000.00'
+WHERE sub_acct_no IN (SELECT sub_acct_no
+                      FROM dpa_sub_account a, dpb_card_change b
+                      WHERE a.acct_no = b.acct_no AND a.prod_id = 'VCC1' AND b.card_acct_mdy_type = 'C' AND
+                            b.data_create_time > '20200402%');
+```
+
+![image-20200430172734682](/image-20200430172734682.png)
+
+```sql
+-- 优化后
+explain update dpa_deposit a inner join dpa_sub_account b on a.sub_acct_no=b.sub_acct_no inner join dpb_card_change c
+    on  b.acct_no=c.acct_no SET a.max_remain_bal = '50000000.00' where b.prod_id='VCC1' AND c.card_acct_mdy_type='C'
+and c.data_create_time>'20200402%' ;
+```
+
+![image-20200430172653012](/image-20200430172653012.png)
+
+**对比**：优化最主要差异在于：UPDATE。
+原sql：update的type为index，rows=9917.即每次update都会扫描全索引树，所以rows=dpa_deposit表记录数，而子查询中dpb_card_chage无可用索引，不可避免的是ALL。导致总扫描数据=7137*9917=70777629。
+
+优化后sql：update的type=ref，并且该数据是唯一的，如果加上org='098'，是可以达到eq_ref的效果，但数据已经唯一，无需再加。总扫描数据=7137*1=7137
 
 ### ==锁==
 
