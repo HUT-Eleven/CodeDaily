@@ -3,7 +3,7 @@ typora-copy-images-to: ./images
 typora-root-url: ./images
 ---
 
-# Servlet
+# ==Servlet==
 
 ## 简介
 
@@ -18,15 +18,15 @@ Servlet = Service  Applet，表示小服务程序。sun公司定义了用于处�
 
 1.构造方法（这也间接说明了java程序中的.class文件不是程序一启动类加载器就会去加载，而是按需加载）
 
-2.public void init(ServletConfig config)
+2.init(ServletConfig config)
 
-3.public void service(**ServletRequest** req, **ServletResponse** res)
+3.service(**ServletRequest** req, **ServletResponse** res)
 
-4.public void destroy()
+4.destroy()
 
-构造方法-init只在==第一次访问==时调用（说明了==servlet是**单实例**，**多线程**==运行）,
+**构造方法**和**init**只在==第一次访问==时调用（说明了==servlet是**单实例**，**多线程**==运行）,
 service()在每次访问都会被调用，
-destory()在项目在服务器上卸载时调用。
+destory()在应用在服务器上卸载时调用。
 
 Demo演示:
 
@@ -36,7 +36,7 @@ Demo演示:
 <servlet>
 	<servlet-name>HelloServlet</servlet-name>
     <servlet-class>gz.itcast.a_servlet.HelloServlet</servlet-class>
-    <!--改变servlet对象创建的时机： tomcat服务器启动的时候就创建servlet对象,数值越大越低
+    <!--改变servlet对象创建的时机： tomcat服务器启动的时候就创建servlet对象.数值越小优先级越高
     <load-on-startup>1</load-on-startup>
 </servlet>
 
@@ -51,7 +51,7 @@ Demo演示:
 
 ### 单实例多线程
 
-单例，是因为不可能每个人访问，都给创建一个servlet对象，降低堆压力。这个对象中的成员变量，就成了“共享数据”，所以会产生多线程安全问题。尽量不要在servlet类中使用成员变量。
+单例，是因为不可能每个人访问，都创建一个servlet对象，堆压力会很大。这个对象中的成员变量，就成了“共享数据”，所以会产生多线程安全问题。尽量不要在servlet类中使用成员变量。
 
 ## 重要对象
 
@@ -114,7 +114,7 @@ this.getServletContext().getRequestDispatcher("/xxxServlet").forward(request, re
 ```java
 转发是服务器行为，重定向是浏览器行为.
 请求重定向：
-    1）地址栏改变，改变为重定向到地址
+    1）地址栏改变为重定向的地址
     2）可以重定向到当前web应用，其他web应用，甚至是其他站点资源。
     3）处于两次不同的请求。不可以使用request域对象来共享数据。
 请求转发：
@@ -134,41 +134,24 @@ this.getServletContext().getRequestDispatcher("/xxxServlet").forward(request, re
 
 ## 路径
 
-### 缺省路径	
-
-在***\*tomcat的%conf%web.xml\****中有配置了一个DefaultServlet，url-pattern就是：/
-
-***\*浏览器输入一个资源名称时，查找资源的顺序是：\****
-
-​			1）首先，在当前web应用下的web.xml文件中查找是否有匹配的url-pattern	
-
-​			2）如果匹配到，执行对应的servlet（动态资源）
-
-​			3）如果没有匹配到，就交给tomcat服务器的DefaultServlett去处理
-
-​			4）DefaultServlet会到当前web应用下读取对应名称的静态资源文件。
-
-​			5）如果读到对应的静态资源文件，那么就把内容返回给浏览器
-
-​			6）如果读不到对应的静态资源文件，那么就返回404的错误页面。
-
 ### 映射规则
 
-| 精确匹配     | /hello  /demo/order |
-| ------------ | ------------------- |
-| 路径模糊匹配 | /*   /hello/*       |
-| 前缀模糊匹配 | *.jsp               |
-| 默认匹配     | /                   |
+| 规则                         |                     |
+| ---------------------------- | ------------------- |
+| 精确匹配                     | /hello  /demo/order |
+| 路径模糊匹配                 | /*   /hello/*       |
+| 前缀模糊匹配                 | *.jsp               |
+| 默认匹配(**DefaultServlet**) | /                   |
 
-***优先级***： 精确匹配  >  路径模糊匹配  >  后缀模糊匹配  >  默认匹配
+**优先级**： 精确匹配  >  路径模糊匹配  >  后缀模糊匹配  >  默认匹配
 
-***需要注意的问题***
+**需要注意的问题**
 
 1. 路径匹配和扩展名匹配无法同时设置  eg: /order/*.action 这是非法的
 
-2. /*  和 / ：/*是 路径模糊匹配，/是 默认匹配（tomcat中的DefaultServlet）
+2. **/***  和 **/** 的区别
 
-***两者都会拦截所有资源***，只是 /* 的优先级很高，所以/*往往是用在Filter，而/优先级低，由于比JspServlet的匹配路径低，所以不会拦截.jsp。
+***两者都会拦截所有资源***，/* 属于路径模糊匹配，优先级很高，所以/*往往是用在Filter，而/优先级低，由于比JspServlet的匹配路径\*.jsp低，所以不会拦截.jsp。
 
 任何访问（无论静态、jsp、servlet等等）都是会经过tomcat服务器，由servlet来处理。
 
@@ -194,13 +177,31 @@ this.getServletContext().getRequestDispatcher("/xxxServlet").forward(request, re
 
 mapping指要映射到哪里，location指哪些地址要被映射
 
-三：使用<mvc:default-servlet-handler/>
+三：使用\<mvc:default-servlet-handler/>
 
 一行搞定所有
 
+### 缺省路径	
+
+在**tomcat的%conf%web.xml**中有配置了一个DefaultServlet，url-pattern就是：/
+
+**浏览器输入一个资源名称时，查找资源的顺序是：**
+
+​			1）首先，在当前web应用下的web.xml文件中查找是否有匹配的url-pattern	
+
+​			2）如果匹配到，执行对应的servlet（动态资源）
+
+​			3）如果没有匹配到，就交给tomcat服务器的DefaultServlett去处理
+
+​			4）DefaultServlet会到当前web应用下读取对应名称的静态资源文件。
+
+​			5）如果读到对应的静态资源文件，那么就把内容返回给浏览器
+
+​			6）如果读不到对应的静态资源文件，那么就返回404的错误页面。
+
 ---
 
-# 会话管理
+# ==会话管理==
 
 web应用程序，是基于http协议进行传输数据的。Http协议是无状态的协议(此处不涉及长连接场景)，无状态就等于每次请求对于服务器来说，都是一次**陌生**的请求。所以就引入了**会话管理机制**；
 
@@ -214,7 +215,7 @@ web应用程序，是基于http协议进行传输数据的。Http协议是无状
 
 1. 服务器创建Cookies，通过**set-cookie响应头**发送给客户端；
 
-2. 浏览器得到cookie后，保存在内存/硬盘中；（**cookie保存客户端**）
+2. 客户端得到cookie后，保存在内存/硬盘中；（**客户端保存cookie**）
 
 3. 再次访问该域名时，携带此cookie数据。
 
@@ -230,7 +231,7 @@ web应用程序，是基于http协议进行传输数据的。Http协议是无状
 
 ### 创建机制
 
-**Session对象是在客户端第一次请求服务器Servlet的时候底层自动创建的，名为JSESSIONID的Cookie**，只访问HTML、IMAGE等静态资源并不会创建Session。
+**Session对象是在客户端第一次请求服务器Servlet的时候底层自动创建的，名为JSESSIONID的Cookie**，只访问HTML、IMAGE等静态资源并不会创建Session,因为不需要访问服务器。
 
 ### 特点
 
@@ -241,13 +242,13 @@ web应用程序，是基于http协议进行传输数据的。Http协议是无状
 
 ---
 
-# Filter
+# ==Filter==
 
 ## 作用
 
 对请求和响应进行过滤
 
-# Listener
+# ==Listener==
 
 观察者设计模式，web程序中的监听器主要用于对 HttpSession、ServletRequest、ServletContext进行监控。
 
