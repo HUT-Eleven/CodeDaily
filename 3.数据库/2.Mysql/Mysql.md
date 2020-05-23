@@ -77,58 +77,62 @@ load data  [low_priority] [local] infile 'file_name.tsv'   [replace | ignore]   
 [lines   terminated by'\n']
 [ignore number lines]
 [(col_name, )]
-
-low_priority:	降低优先级，等读共享锁无使用时，才进行写
-local：	文件在客户端，不在数据库的服务器上.如果是在windows上路径需加转义符。https://www.iteye.com/blog/tangmingjie2009-889925
-replace和ignore：控制唯一键重复处理。replace替换，ignore跳过
-fields：指定了每行数据字段之间的关系
-	terminated by	描述字段间的分隔符，默认情况下是tab字符（\t）
-	[OPTIONALLY] enclosed by	描述的是字段的括起字符(eg: enclosed by '"' 即"xxx"，一般不指定),OPTIONALLY表示，只对char/varchar/text等等这些加enclose by字符
-	escaped by		描述的转义字符。默认的是反斜杠
-	默认效果：fields terminated by'\t' enclosed by '' escaped by'\\'
-lines:指定了行与行之间关系
-	默认效果：lines terminated by'\n'
-ignore number lines:忽略前几行，通常用来忽略首行字段名
 ```
+
+**以下为参数说明：**
+
+- **low_priority**:	降低优先级，等读共享锁无使用时，才进行写
+- **local**：文件在客户端，不在数据库的服务器上.如果是在windows上路径需加转义符。[local问题](https://www.iteye.com/blog/tangmingjie2009-889925)
+- **replace|ignore**：控制唯一键重复处理。replace替换，ignore跳过
+- **fields**：指定了每行数据字段之间的关系
+  	- **terminated by**:描述字段间的分隔符，默认情况下是tab字符（\t）
+   - **[OPTIONALLY] enclosed by**:描述的是字段的括起字符(eg: enclosed by '"' 即"xxx"，一般不指定),OPTIONALLY表示，只对char/varchar/text等等这些加enclose by字符
+   - **escaped by**:描述的转义字符。默认的是反斜杠，所以一般也不指定
+      	默认效果：fields terminated by'\t' enclosed by '' escaped by'\\'
+- **lines**:指定了行与行之间关系
+  	- **terminated by**:指定行与行之间的分隔符，默认\n;
+- **ignore number lines**:忽略前几行，通常用来忽略首行字段名
+
+==需注意的问题==：
+
+- 文件权限：load data必须要对该文件有读的权限
+- local_infile：该值是控制能否使用local参数，也即能否加载客户端文件。可以通过`set global local_infile = 'ON';`打开；
+- null值问题：暂时只知道load data infile导入时是识别`\N`作为空值。所以在导出时也设置为`\N`就可以正确识别null值了。
 
 #### 4. select ... into outfile
 
-`select... into outfile 'file_name' [Fields... lines...]`
-语法：两个命令的FIELDS和LINES子句的语法是相同的.
+> load data infile的逆操作
 
-1. ==select...into outfile只能导出到mysql所在的服务器，并且需要具备写的权限，如果secure_file_priv有限制，则需要服从限制。针对此情况，可以用DataGrip==
-2. 是与load data 对应的逆操作。
-3. select...into outfile对于null值导出后默认为**\\N**   (escaped by 没修改)
-4. 字段terminated和line的terminated最好可以取一些特殊符号，比如fuck。字段之间取逗号或者tab都有风险，视情况而定。
+```sql
+select... into outfile 'file_name' [Fields... lines...]
+FIELDS和LINES的语法和load data...infile是相同的.
+```
 
 ==需要注意的问题：==
 
-1. 权限问题：other用户+r
-
-2. local问题：https://www.iteye.com/blog/tangmingjie2009-889925
-
-3. **secure-file-priv**：用来限制LOAD DATA, SELECT ... OUTFILE, and LOAD_FILE()传到哪个指定目录的。
+1. **secure-file-priv**：用来限制LOAD DATA, SELECT ... OUTFILE, and LOAD_FILE()传到哪个指定目录的。
    三种值：
 
-   ```sql
-   null	-- 禁止导入导出
-   /xx/xx/	--表示只允许导入导出该目录下文件（PS：测试子目录也不行）
-   空		--不限制导入导出
-   ```
+```sql
+null	-- 禁止导入导出
+/xx/xx/	--表示只允许导入导出该目录下文件（PS：测试子目录也不行）
+空		--不限制导入导出
+```
+如果secure_file_priv有限制，则只能导出到mysql所在的服务器下的指定路径，并且需要具备写的权限。**针对此情况，可以用DataGrip**;
 
-4. ==空值问题==：==字段中的空值用**\N**表示==
+2. 空值问题：字段中的空值用**\N**表示
 
-   - select... into outfile默认导出为\N
-   
-   - 用DataGrip导出数据
-     <img src="/image-20200414162531977.png" alt="image-20200414162531977" style="zoom:50%;" />
-   
-5. ==字段中存在换行==:
+- select... into outfile默认导出为\N
 
-   - 导出文件时定义字段括起符和换行符：fields enclosed by '"' lines terminated by 'Fuck'
-     即：用双引号阔起字段值，用XFuckX作为换行标志符。导入时也同样如此。
-     可以用select...into outfile 或者 DataGrip（DataGrip的这个功能完全等价于select...into outfile）
-     <img src="/image-20200414180011316.png" alt="image-20200414180011316" style="zoom: 67%;" />
+- 用DataGrip导出数据时，控制如下：
+  <img src="/image-20200414162531977.png" alt="image-20200414162531977" style="zoom:50%;" />
+
+3. 字段中存在换行：fields的terminated和line的terminated最好取一些特殊符号，比如ElevenZ。字段之间取逗号或者tab都有风险，视情况而定。DataGrip如下：
+   <img src="/image-20200414180011316.png" alt="image-20200414180011316" style="zoom: 67%;" />
+
+4. DataGrip中的load data等价操作：
+
+<img src="/image-20200517175849738.png" alt="image-20200517175849738" style="zoom: 50%;" />
 
 
 ### ==命令==
@@ -136,6 +140,10 @@ ignore number lines:忽略前几行，通常用来忽略首行字段名
 **以下命令无法详细记录，只能在平时遇到一些特殊场景做登记。**
 
 #### 1.  mysql
+
+1. 登录数据库功能
+2. 执行sql文件功能
+3. 导出查询结果功能（较少用）：
 
 ```sql
 -- 把SQL查询结果导出到tsv文件(用的少，等价于select...into outfile，但功能单一，不能自定义分隔符等等)
@@ -146,10 +154,39 @@ mysql -uroot -p -P3306 -hlocalhost -B -e "select * from film_text" test > 8.tsv
 
 #### 2. mysqldump
 
-`mysqldump [options] > dump.sql`
-但可能用户权限受限，所以可用第三方软件（DataGrip...），导出的是**sql格式**的。
+##### 2.1 作用
+
+**对数据库进行逻辑备份**
+
+##### 2.2 使用
+
+```sql
+mysqldump -uroot -p -hlocalhost -P3306 [options] [库名] [表名]> dump.sql
+```
+
+**[options] (常用)**:
+
+> 以下有双选项的，建议选长的，见名知意。
+
+```sql
+--all-databases, -A	导出所有数据库
+--databases, -B		导出指定数据库
+--tables			导出指定表
+--no-data, -d		不导出表数据，也即只有create table语句
+--no-create-info	不导出create table语句
+--where 			限制导出数据的条件，常用于导出指定表的指定数据，也可用--event代替
+--comments			导出表的comment信息
+....
+一般反选项就是前面加skip，eg:
+--skip-comments		就是comments的反选项，即不导出表的comment信息
+--skip-add-drop-table	不导出删表语句
+```
 
 [参数详解](https://www.cnblogs.com/flagsky/p/9762726.html)
+
+但可能用户权限受限，所以可用第三方软件（DataGrip...），导出的是**sql格式**的。
+
+
 
 #### 3. ==mysqldumpslow==
 ##### 3.1 日志内容
@@ -529,19 +566,62 @@ and c.data_create_time>'20200402%' ;
 
 ### ==锁==
 
-锁：是计算机协调多个进程/线程并发访问**同一个资源**的机制.
+> 锁：是计算机协调多个进程/线程并发访问**同一个资源**的机制.在计算机资源中，CPU/RAM/IO都是争用的资源，数据也是，所以数据库的锁也至关重要。
+>
+> MySQL 的锁机制：比较简单，其最显著的特点是：不同的存储引擎支持不同的锁机制。MyISAM采用表级锁，InnoDB即支持表级锁，又支持行级锁，默认是行级锁。
 
-读锁会阻塞写，但不会阻塞读。写锁会把读和写都阻塞。
+#### 锁分类：
 
-innodb行锁变表锁？为什么？mysql8还有这么智障吗？
+##### 1. 按粒度分
+
+- **表级锁**：开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突的概率最高,并发度最低。
+- **行级锁**：开销大，加锁慢；会出现死锁；锁定粒度最小，发生锁冲突的概率最低,并发度也最高。
+- 页面锁：开销和加锁时间界于表锁和行锁之间；会出现死锁；锁定粒度界于表锁和行锁之间，并发度一般。
+
+##### 2. 按机制分
+
+- 读锁（Share Locks，记为S锁）
+- 写锁（eXclusive Locks，记为X锁。也称为独占锁/排它锁）
+
+#### MyISAM表锁
+
+> MyISAM在执行DQL前，会**自动**给**涉及的所有表**加读锁，在执行DML前，会**自动**给**涉及的所有表**加写锁。
+>
+> Mysql不支持锁自动扩展，也即一次性锁了哪些表，就只能访问这些表，不能访问未加锁的表。
+>
+> Mysql不支持锁升级，也即读锁不会自动升级到写锁。所以获取读锁就只能读，不能写。
+>
+> 同一张表在sql中出现几次就会锁定几次，理论上是表锁是自动加的，但显式加锁时需要对别名也加锁。
+>
+> 但一个进程要获取这张表的读锁时，另一个进程要获取写锁，则写锁会优先取得。可以通过low_priority_updates来调节。
+
+##### 查询表级锁争用情况
+
+```sql
+show status like 'table_locks%';
+-- Table_locks_immediate:直接获得表锁的次数
+-- Table_locks_waited:未能直接获得表锁，而等待的次数。如果此值过高，则表锁争用情况严重。
+```
+
+##### 表级锁的锁模式
+
+> **只有读读共享，其他都是串行。**
+
+![UTOOLS1590206412989.png](/e64402386225815b657a00d092135ca3.png)
+
+
+
+show status like 'innodb_row_lock%';查看InnoDB行锁争用情况；
+
+select * from information_schema.innodb_locks;查看Innodb锁的情况
 
 间隙锁？
 
 
 
-### ==开源工具==
+### 开源工具
 
-#### ==pt-query-digest==
+#### pt-query-digest
 
 ##### 简介
 
@@ -729,7 +809,7 @@ SELECT /*!40001 SQL_NO_CACHE */ * FROM `aps_packet_20191014`\G
 
 ---
 
-#### ==SQLAdvisor==
+#### SQLAdvisor
 
 [美团开源项目](https://github.com/Meituan-Dianping/SQLAdvisor)，索引优化建议。[sqladvisor-web](https://github.com/zyw/sqladvisor-web)提供了web界面操作	
 
