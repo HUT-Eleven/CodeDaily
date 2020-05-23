@@ -226,7 +226,10 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 -Dlanguage.conf=en
 -Dfile.encoding=UTF-8
 ```
+**-D开头的是Java System Property**，可通过System.getProperty()等方式取得。
+
 **其他配置**
+
 ```sh
 -Xss	每个线程的栈大小,一般不配置。在内存层面，HotSpot是不区分虚拟机栈和本地方法栈的。
 -XX:PrintHeapAtGC	打印GC前后的详细堆栈信息
@@ -270,7 +273,7 @@ YGC结束---> Eden区和From区全部==清空==，To与From==交换==角色，�
 
 作用：==查看虚拟机的进程==（有权访问）,与linux上的ps类似
 
-格式：jps [options] [hostid]  # 默认localhost
+格式：jps [options] [ip]  # 默认localhost
 
 ```sh
 -l # list出当前虚拟机所有进程号+启动类全名
