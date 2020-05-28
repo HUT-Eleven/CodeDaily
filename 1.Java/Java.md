@@ -124,7 +124,7 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
 **作用**：
 
-1. 成员修饰符（成员变量、成员方法），不能修饰局部变量。
+1. 成员修饰符（成员变量、成员方法），==不能修饰局部变量==。
 2. 静态代码块。
 
 **特点**：
@@ -297,3 +297,126 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
    格式：new 父类or接口（）{子类覆盖的方法+子类自身的方法}
 
 ​     
+
+## 注解
+
+> 注解：也叫“元数据”，可以理解为“**标签**”，给类/接口/成员方法/成员属性/注释信息...等等加注解，就是来贴标签，来标注一些信息。
+> 比如：@Test：标注这个方法需要被测试；
+> @Deprecated:标注已过时；
+> @Override：标注是覆盖；
+> Spring中的@Configuration：标注这是一个配置类；等等....
+
+### 作用
+
+- 文档：比如方法/类上的注释@Since/@Param等等，可辅助生成文档。
+- 编译检查：@Override/@Deprecated/....
+- **==代码分析标注等等==**：比如Spring中的@Configuration，标注这是一个配置类，@Bean，标注这是一个Bean。
+- .....略
+
+### Java 预置的注解
+
+- @Deprecated
+- @SuppressWarnings
+- @SafeVarargs：参数安全类型注解
+- @FunctionalInterface：函数式接口注解
+- ...略...
+
+### 自定义注解
+
+- 格式
+
+```java
+元注解
+public @interface AnnotationName{}
+```
+
+- 本质
+
+编译后，再反编译`javap TestAnnotation.class`，得到：
+
+```java
+Compiled from "TestAnnotation.java"
+public interface TestAnnotation extends java.lang.annotation.Annotation {}
+// 本质上就是一个接口，继承了Annotation接口
+```
+
+- 属性
+
+  > 注解本质是接口，注解的属性相当于接口中的方法。反编译：
+
+  ```java
+  public interface TestAnnotation extends java.lang.annotation.Annotation {
+    public abstract int age();
+  }
+  ```
+
+  > - 以“**无形参的方法**”形式来声明
+  > - 方法名=属性名
+  > - 方法返回值=属性类型。
+
+  - 要求1：属性的返回值类型只能是：
+
+    - 8种基本数据类型
+    - String
+    - 注解
+    - 枚举
+    - 以上类型的数组形式
+
+  - 要求2：使用注解时，需要给属性赋值
+
+    - default：给属性赋默认值
+
+      ```java
+      public @interface TestAnnotation{
+          int age() default 1;
+      }
+      ```
+
+    - value：如果该注解只有一个属性，且属性的值叫value，则使用时可以直接复制，不需要带value=
+
+- 元注解
+
+  - @Target:表明注解可使用的地方
+
+    - ElementType.ANNOTATION_TYPE 可以给一个注解进行注解
+    - ElementType.CONSTRUCTOR 可以给构造方法进行注解
+    - ElementType.FIELD 可以给属性进行注解
+    - ElementType.LOCAL_VARIABLE 可以给局部变量进行注解
+    - ElementType.METHOD 可以给方法进行注解
+    - ElementType.PACKAGE 可以给一个包进行注解
+    - ElementType.PARAMETER 可以给一个方法内的参数进行注解
+    - ElementType.TYPE 可以给一个类型进行注解，比如类、接口、枚举
+
+    ```java
+    @Target({ElementType.METHOD,ElementType.TYPE})// 方法或者Type上
+    ```
+
+  - @Retetion:保留期
+
+    - RetentionPolicy.SOURCE 注解只在源码阶段保留，在编译器进行编译时它将被丢弃忽视。
+    - RetentionPolicy.CLASS 注解只被保留到编译进行的时候，它并不会被加载到 JVM 中。
+    - **RetentionPolicy.RUNTIME** 注解可以保留到程序运行的时候，它会被加载进入到 JVM 中，所以在程序运行时可以获取到它们。
+
+  - @Documented：注解可以保留在javadoc文档中
+
+  - @Inherited：描述注解是否被子类继承
+
+    ```java
+    @Inherited
+    public @interface A{}
+    
+    @A
+    public class B{}
+    
+    public class C extends B{}// 则C也是用@A注解的
+    ```
+
+  - Repeatable：可重复（待研究）
+
+### 读取注解
+
+> 需要用到反射
+
+1. 获取注解所在的TYPE （class/Method/Field...）；
+2. .getAnnotation()获取注解；
+3. 调用注解的方法(也即注解的属性)，获取值
