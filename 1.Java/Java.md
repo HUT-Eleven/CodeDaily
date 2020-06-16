@@ -23,6 +23,115 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
 **jar包的作用**：其实就是把.class文件放到一个文件夹中，方便第三方使用。
 
+### classpath
+
+> 指的是.class文件所在的**目录**，不是.class文件的位置。既然是.class文件，则讨论点应该是**项目打包后的目录结构**。
+
+一、以**SSM**架构项目举例，打成**==war==**包：
+上部分是源代码的目录结构，下部分是编译打包后的目录结构。
+
+问：==哪里有.class文件呢？==
+
+答：WEB-INF/classes下  和  lib/xxx.jar包下。
+
+​	1. 对于引用我们自身写的配置文件时，则classpath=WEB-INF/classes,
+​	     e.g.  **引用classpath:config/application-dao.xml ，等价于WEB-INF/classes/config/application-dao.xml**，因为原本写在resource目录下的文件，被编译到了classes底下。
+
+​	2. **对于maven引用的jar，其实本身也是一个项目**，所以此时的classpath可能会去自身jar中查找，当然也有可能去访问WEB-INF/classes目录
+
+<img src="/image-20200614121939444.png" alt="image-20200614121939444" style="zoom:60%;" />
+
+二、以SpringBoot项目为例，打成**==jar==**包
+
+> 项目打成jar包和war包的目录结构是不同的，而且也和框架有关，像springboot的包目录结构就是自身设定的。
+
+springboot打成jar后的目录结构：
+
+![1592110112127](/1592110112127.png)
+
+如图所示:
+
+BOOT-INF/classes：项目中的java文件编译后的.class文件
+
+BOOT-INF/lib：maven依赖的jar
+
+所以此时的**classpath=BOOT-INF/classes  或   BOOT-INF/lib**
+
+### 打jar包运行
+
+#### 打jar包方式
+
+##### 1. 原生命令打包
+
+1. 编译：`javac  org/hut/Demo.java`
+   如果有中文：`javac -encoding UTF-8 org/hut/Demo.java`
+2. 打包：`jar -cvf Demo-snapshot-0.0.1.jar org/hut/Demo.class`
+3. 运行：`java -jar  Demo-snapshot-0.0.1.jar`   **报错： xxx没有主清单属性** 
+   打开`META-INF/MENIFEST.MF`, 加入`Main-Class: org.hut.Demo`(**冒号后面有一个空格,最后必须预留一个空行**)
+
+##### 2.  Maven插件打包
+
+> 打完可直接运行
+
+```xml
+<!-- 以下网上随便摘抄的一个插件模板 -->
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.6</version>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <addClasspath>true</addClasspath>
+                        <classpathPrefix>lib/</classpathPrefix>
+                        <mainClass>org.hut.B</mainClass>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.10</version>
+            <executions>
+                <execution>
+                    <id>copy-dependencies</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>copy-dependencies</goal>
+                    </goals>
+                    <configuration>
+                        <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
+##### 3. IDE打包
+
+> 此处不赘述
+
+一般java项目可以打成Jar包或者war包，war包一般丢到tomcat中运行，而jar一般是用nohup运行
+
+#### 零散要点
+
+- java运行jar包时携带参数的方式：
+
+  1. 使用`-D`携带自定义参数，程序中可用System.getProperty("xxx")取
+
+     `java -jar -Dname=tom -Dconfig=/tmp/sun.config Demo.jar `
+
+  2. 或者直接跟在命令后面，那就是直接传给main(Srting[] args) 中args了。
+
+  3. 还有就是框架自身去读取命令参数，如SpringBoot就可携带很多参数，程序中会主动去读取这些参数
+
+- `META-INF/MENIFEST.MF`文件中的Main-Class的值是程序的入口，也即main函数所在的位置。
+
 ## 面向对象
 
 概念：你充电话费是面向过程，而你女朋友充电话费就是面向对象。
@@ -144,7 +253,9 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 **父类中的私有内容，子类是否具备？**
 答：不用纠结是否继承。Java官方文档的解释：子类不能继承父类的私有属性，但是如果父类中公有的方法影响到了父类私有属性，那么私有属性是能够被子类使用的。
 
-**对象实例化过程中成员变量的变化：**
+#### 对象实例化过程
+
+**成员变量的变化：**
 
 默认初始化-父类初始化-显示初始化--构造代码块初始化--构造函数初始化（默父显块构）.
 静态此处不讨论。
@@ -189,7 +300,7 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
    - private（私有化的方法就无法覆盖了，就一直抽象）
    - static（abstract static的方法又无实现，不合常理）
-   - final（final修饰的类/方法不能被继承/覆盖,与abstract完全相冲）
+   - final（final修饰的类/方法不能被继承/覆盖,与abstract完全相冲,注意只要不是同时修饰就合理，比如final类里就可以有abstract方法）
 
    **注意：**abstract只修饰类和方法，所以当以下几个关键字修饰成员变量时是无关的。如:
 
@@ -203,7 +314,7 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
 ### 接口
 
-> 等于更加抽象开放的抽象类
+> 等于**更加“纯正”的抽象类**
 
 1. ```java
    // 成员变量
@@ -233,7 +344,9 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
    }
    ```
 
-3. **接口没有构造函数**
+3. ==**接口没有构造函数**==
+
+4. 接口中没有非抽象的方法，也说明了**接口是不继承Object类的**
 
 **接口与抽象类的区别：**抽象类多用来描述“类”，接口都用来描述“功能”，接口多实现的特点，也使其扩展性更强。
 
@@ -261,7 +374,7 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
 ### 内部类
 
-> 设计原因：可直接访问类中的私有成员。
+> 设计原因：因为private成员，在外部是无法访问的，而内部类则可以解决这个问题。
 
 1. 内部类无限制访问外部类，**外部类**必须**new 内部类对象**才能访问内部类成员
 
@@ -290,30 +403,31 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
    - 局部内部类
      1. 符合局部位置的特点，只能内部访问，在方法外不知道这个“局部内部类”的存在；
      2. **局部内部类访问它所在方法的局部变量/形参时，要求该局部变量必须声明为final的原因**：对象的生命周期往往会比局部变量的长，比如我们可以把局部内部类的对象指向给其他的引用，这样这个对象就可以一直生存着，而局部变量随着方法出栈就消失了。此时，如果我们在用这个存活的变量调用已经死了的局部变量就会报错。jdk8开始，会默认给这个情况的局部变量加上隐式final，但最好手动加上.
-        形参也要加final
+        **形参也要加final**
 
-6. 匿名内部类
-   其实就是匿名子类对象；
-   格式：new 父类or接口（）{子类覆盖的方法+子类自身的方法}
 
 ​     
 
-## 注解
+## ==注解==
 
 > 注解：也叫“元数据”，可以理解为“**标签**”，给类/接口/成员方法/成员属性/注释信息...等等加注解，就是来贴标签，来标注一些信息。
-> 比如：@Test：标注这个方法需要被测试；
-> @Deprecated:标注已过时；
-> @Override：标注是覆盖；
-> Spring中的@Configuration：标注这是一个配置类；等等....
+> 比如：
+> 		@Test：标注这个方法需要被测试；
+> 		@Deprecated:标注已过时；
+> 		@Override：标注是覆盖；
+> 		Spring中的@Configuration：标注这是一个配置类；等等....
 
 ### 作用
 
-- 文档：比如方法/类上的注释@Since/@Param等等，可辅助生成文档。
-- 编译检查：@Override/@Deprecated/....
-- **==代码分析标注等等==**：比如Spring中的@Configuration，标注这是一个配置类，@Bean，标注这是一个Bean。
-- .....略
+1. 文档：比如方法/类上的注释@Since/@Param等等，可辅助生成文档。
 
-### Java 预置的注解
+2. 编译检查：@Override/@Deprecated/....
+
+3. **==代码分析标注等等==**：比如Spring中的@Configuration，标注这是一个配置类，@Bean，标注这是一个Bean。
+
+4. .....略
+
+### Java 预置注解
 
 - @Deprecated
 - @SuppressWarnings
@@ -323,14 +437,17 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 
 ### 自定义注解
 
-- 格式
+#### 格式
 
 ```java
 元注解
-public @interface AnnotationName{}
+[自定义注解]
+public @interface AnnotationName{
+    属性类型 属性名() [default];
+}
 ```
 
-- 本质
+#### 本质
 
 编译后，再反编译`javap TestAnnotation.class`，得到：
 
@@ -340,41 +457,41 @@ public interface TestAnnotation extends java.lang.annotation.Annotation {}
 // 本质上就是一个接口，继承了Annotation接口
 ```
 
-- 属性
+#### 属性
 
-  > 注解本质是接口，注解的属性相当于接口中的方法。反编译：
+> 注解本质是接口，注解的属性相当于接口中的方法。反编译：
 
-  ```java
-  public interface TestAnnotation extends java.lang.annotation.Annotation {
-    public abstract int age();
-  }
-  ```
+```java
+public interface TestAnnotation extends java.lang.annotation.Annotation {
+  public abstract int age();
+}
+```
 
-  > - 以“**无形参的方法**”形式来声明
-  > - 方法名=属性名
-  > - 方法返回值=属性类型。
+> - 以“**无形参的方法**”形式来声明
+> - 方法名=属性名
+> - 方法返回值=属性类型。
 
-  - 要求1：属性的返回值类型只能是：
+- **要求1：属性类型**只能是：
 
-    - 8种基本数据类型
-    - String
-    - 注解
-    - 枚举
-    - 以上类型的数组形式
+  - 8种基本数据类型
+  - String
+  - 注解
+  - 枚举
+  - 以上类型的数组形式
 
-  - 要求2：使用注解时，需要给属性赋值
+- 要求2：使用注解时，需要给属性赋值
 
-    - default：给属性赋默认值
+  - default：给属性赋默认值
 
-      ```java
-      public @interface TestAnnotation{
-          int age() default 1;
-      }
-      ```
+    ```java
+    public @interface TestAnnotation{
+        int age() default 1;
+    }
+    ```
 
-    - value：如果该注解只有一个属性，且属性的值叫value，则使用时可以直接复制，不需要带value=
+  - value：如果该注解只有一个属性，且属性的值叫value，则使用时可以直接赋值，不需要带value=
 
-- 元注解
+- **要求3：元注解**
 
   - @Target:表明注解可使用的地方
 
@@ -408,7 +525,7 @@ public interface TestAnnotation extends java.lang.annotation.Annotation {}
     @A
     public class B{}
     
-    public class C extends B{}// 则C也是用@A注解的
+    public class C extends B{}// 则C也存在@A注解的
     ```
 
   - Repeatable：可重复（待研究）
@@ -418,5 +535,97 @@ public interface TestAnnotation extends java.lang.annotation.Annotation {}
 > 需要用到反射
 
 1. 获取注解所在的TYPE （class/Method/Field...）；
-2. .getAnnotation()获取注解；
+2. .getAnnotation(...)获取注解；
 3. 调用注解的方法(也即注解的属性)，获取值
+
+
+
+## 枚举
+
+### 定义枚举
+
+```java
+public enum Season {	// enum是关键字，Enum是类
+    SPRING,SUMMER,AUTUMN,WINTER	// 都是Season的实例
+}
+```
+
+### 本质
+
+javap 反编译，得到：
+
+```java
+# javap Season.class
+    
+Compiled from "Season.java"
+public final class org.hut.Season extends java.lang.Enum<org.hut.Season> {
+  public static final org.hut.Season SPRING;
+  public static final org.hut.Season SUMMER;
+  public static final org.hut.Season AUTUMN;
+  public static final org.hut.Season WINTER;
+  public static org.hut.Season[] values();
+  public static org.hut.Season valueOf(java.lang.String);
+  static {};
+}
+```
+
+**1. 继承Enum类**
+
+Enum类:
+
+```java
+public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializable {.......}
+```
+
+Enum类中的方法：上个红框是继承和实现的方法，下边红框是Enum类中的方法。**这些方法全是final修饰，无法被覆盖。**
+
+<img src="/image-20200610005742079.png" alt="image-20200610005742079" style="zoom:67%;" />
+
+**Enum类的方法初探：**
+
+```java
+protected Enum(String name, int ordinal) {	//构造方法
+    this.name = name;						//取个名
+    this.ordinal = ordinal;					//序号，从0开始
+}
+name():取出枚举名
+oridinal():取序号
+valueOf(String):通过字符串得到枚举
+// 其他方法有用到再细品
+```
+
+**2. fina修饰，所以无法继承**
+
+**3. 成员变量**
+
+就是“常量”, 所以**枚举的功能就体现出来了，快速定义常量**.但我们知道final是最终的意思，而static又是随类加载，所以final + static修饰的变量应该在类加载时就要进行初始化的。如果不赋值，直接默认初始化，那这个变量就没意义了，所以一定要显示初始化，而这个动作就是static{}中完成的。
+
+```java
+public static final org.hut.Season SPRING;
+public static final org.hut.Season SUMMER;
+public static final org.hut.Season AUTUMN;
+public static final org.hut.Season WINTER;
+```
+
+**4. 成员方法**
+
+反编译后有两个方法：
+
+```java
+public static org.hut.Season[] values();		// 取出所有对象
+public static org.hut.Season valueOf(java.lang.String);		// 覆盖父类方法，不常用
+```
+
+**5. 静态代码块**
+
+**6. 枚举类的构造函数**
+
+其实枚举类中是默认有个构造函数的：
+
+```java
+Season(){}
+//[枚举类的构造器不可以添加访问修饰符，枚举类的构造器默认是private的。但你自己不能添加private来修饰构造器。]
+```
+
+
+

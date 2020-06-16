@@ -41,6 +41,8 @@ innodb_row_lock_time	--等待总时长
 innodb_row_lock_time_avg--等待平均时长
 innodb_row_lock_waits	--等待总次数
 ......
+-- 慢查询相关
+slow_queries			-- 慢查询次数
 ```
 
 ##### variables--服务器变量
@@ -52,7 +54,6 @@ innodb_row_lock_waits	--等待总次数
 slow_query_log			-- 慢查询开关
 slow_query_log_file 	-- 慢查询文件位置
 long_query_time 		-- 慢查询阈值，单位秒，
-slow_queries			-- 慢查询次数
 slow_launch_time 		-- 创建线程的阈值,且Slow_launch_threads(慢建立线程数)+1
 log_queries_not_using_indexes	-- 没有索引的查询是否记录到慢查询日志
 ......
@@ -167,6 +168,7 @@ mysqldump -uroot -p -hlocalhost -P3306 [options] [库名] [表名]> dump.sql
 **[options] (常用)**:
 
 > 以下有双选项的，建议选长的，见名知意。
+> [参数详解](https://blog.csdn.net/loiterer_y/article/details/85091798)
 
 ```sql
 --all-databases, -A	导出所有数据库
@@ -176,15 +178,17 @@ mysqldump -uroot -p -hlocalhost -P3306 [options] [库名] [表名]> dump.sql
 --no-create-info	不导出create table语句
 --where 			限制导出数据的条件，常用于导出指定表的指定数据，也可用--event代替
 --comments			导出表的comment信息
+--ignore-table		不导出指定表,--ignore-table=t1 --ignore-table=t2
 ....
 一般反选项就是前面加skip，eg:
 --skip-comments		就是comments的反选项，即不导出表的comment信息
 --skip-add-drop-table	不导出删表语句
 ```
 
-[参数详解](https://www.cnblogs.com/flagsky/p/9762726.html)
+**注意点：**
 
-但可能用户权限受限，所以可用第三方软件（DataGrip...），导出的是**sql格式**的。
+- 导出的是**sql格式**；
+- /*!  .... */ 这不是注释，是mysql为了保持导出sql文件的兼容性，但导入到数据库时，在mysql中会被执行，在其他数据库不会被执行；
 
 
 
@@ -196,7 +200,7 @@ mysqldump -uroot -p -hlocalhost -P3306 [options] [库名] [表名]> dump.sql
 ``` sql
 # Time(发生时间): 2017-06-03T06:48:27.030315Z
 # User@Host: root[root] @ localhost（主机信息） []  Id:3
-# Query_time（查询时间）: 1.896889  Lock_time（等待锁的时间）: 0.000823 Rows_sent(返回客户端行总数): 100000  Rows_examined(扫描行总数): 200000
+# Query_time（查询耗时）: 1.896889  Lock_time（等待锁耗时）: 0.000823 Rows_sent(返回客户端行总数): 100000  Rows_examined(扫描行总数): 200000
 SET timestamp=1496472507; 
 select * from z_order limit 100000;
 ```
@@ -636,7 +640,7 @@ pt-query-digest可以分析binlog、General log、slowlog，也可以通过SHOWP
 
 **SYNOPSIS**：`pt-query-digest [OPTIONS] [FILES] [DSN]`，具体参数直接百度
 
-**示例：**
+##### 示例
 
 **1.直接分析慢查询文件:**
 
@@ -644,7 +648,7 @@ pt-query-digest可以分析binlog、General log、slowlog，也可以通过SHOWP
 pt-query-digest slow.log > slow_report.log
 ```
 
-**2.分析最近12小时内的查询：**
+**2.分析最近n小时内的查询：**
 
 ==--since== : 指定起始时间，12h表示从12小时前，或指定时间'2017-01-07 09:30:00'
 
@@ -722,7 +726,7 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 
 > 可分为三部分查看：总体--分组统计--每组详情
 
-**第一部分：总体统计结果**
+**第一部分：总体统计情况**
 
 ```sql
 # 100.3s user time, 2.6s system time, 59.05M rss, 251.50M vsz
@@ -742,12 +746,13 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 # Query size       163.08M       6   9.58k  335.94  463.90  173.18  400.73
 -- stddev 标准差
 -- median 中位数
--- Exec time 语句执行时间;	Lock time 锁占用时间;
+-- Exec time 语句执行时间;	
+-- Lock time 锁占用时间;
 -- Rows sent 发送到客户端的行数;	Rows examine 扫描行数; Query size 查询大小
 -- 95%表示其中95%，eg:Exec time->95% 表示：有95%sql的平均执行时间=8ms
 ```
 
-**第二部分：分组统计结果**
+**第二部分：按分组统计情况**
 
 ```sql
 # Profile
@@ -763,8 +768,8 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 -- Response time 某类查询总响应时间，和百分比
 -- Calls         总次数
 -- R/Call        平均响应时间 = Response/Calls = 总响应时间/总次数
--- V/M           响应时间Variance-to-mean的比率???
--- Item          提取的具体查询
+-- V/M           响应时间Variance-to-mean的比率
+-- Item          sql
 ```
 
 **第三部分：每组详细统计结果**
@@ -772,7 +777,7 @@ pt-query-digest --type=genlog localhost.log > slow_report11.log
 ```sql
 # Query 1: 0.03 QPS, 0.20x concurrency, ID 0xE3C753C2F267B2D767A347A2812914DF at byte 70971444
 -- Query 就是第二部分的Rank排名
--- ID 也是第二部分的ID
+-- ID 也是第二部分的Query ID
 # This item is included in the report because it matches --limit.
 # Scores: V/M = 650.11
 # Time range: 2019-12-05T17:00:14 to 2019-12-09T20:04:46

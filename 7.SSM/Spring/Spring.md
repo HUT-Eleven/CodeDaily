@@ -1,5 +1,3 @@
-typora-root-url: ../images
-
 # Spring
 
 > 诸如Spring系列，SpringBoot系列这类框架知识的学习，不像一些计算机基础知识的学习，框架是封装，是为了简化开发的难度，提高项目的质量，降低运维的难度，这是一个框架诞生以及能否生存的关键。Spring是为了解决整个JavaEE的开发中会涉及到的东西，所以知识点散乱，并且涉及到的东西也多，所以学习中应注意分模块。
@@ -577,7 +575,7 @@ public class APP {
 	@Test
 	public void testAOP() throws Exception {
 		ClassPathXmlApplicationContext ioc = new ClassPathXmlApplicationContext("spring/applicationContext-aop.xml");
-		// 细节1：必须用UserService去获取bean，不能使用UserServiceImpl,虽然UserServiceImpl上有@Service，但实际注入到IOC容器的对象是代理对象。
+		// ！！！细节1：必须用UserService去获取bean，不能使用UserServiceImpl,虽然UserServiceImpl上有@Service，但实际注入到IOC容器的对象是代理对象。
 		UserService userService = ioc.getBean(UserService.class);
 		System.out.println("所实现的接口是："+userService.getClass());;
 		userService.show();
@@ -601,7 +599,7 @@ public class APP {
 	@Test
 	public void testAOP() throws Exception {
 		ClassPathXmlApplicationContext ioc = new ClassPathXmlApplicationContext("spring/applicationContext-aop.xml");
-		// 因为cglib是继承的方式实现代理，所以这里得到的代理对象可以用父类接收
+		// ！！！因为cglib是继承的方式实现代理，所以这里得到的代理对象可以用父类接收
 		UserServiceImpl userServiceImpl = ioc.getBean(UserServiceImpl.class);
 		System.out.println("所实现的接口是："+userServiceImpl.getClass());;
 		userServiceImpl.show();

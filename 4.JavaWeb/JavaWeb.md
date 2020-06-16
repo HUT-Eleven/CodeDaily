@@ -7,12 +7,62 @@ typora-root-url: ./images
 
 ## 简介
 
-Servlet = Service  Applet，表示小服务程序。sun公司定义了用于处理网络请求接口规范（javax.servlet.*）.
-从原理上讲，Servlet可以响应任何类型的请求，但绝大多数情况下Servlet只用来扩展基于HTTP协议的Web服务器。
+> 1. sun公司定义了==JAVA处理网络请求的接口规范==：Servlet，位置：javax.servlet.*，不在rt.jar中，需另外导入。Servlet = Service  Applet，表示服务小程序。
+> 2. Servlet的具体实现由Servlet容器决定，如Tomcat、JBoss。这种设计概念形同JDBC
+>
+> 3. 从原理上讲，Servlet可以响应任何类型的请求，但绝大多数情况下Servlet只用来扩展基于HTTP协议的Web服务器。
+
+### Servlet接口规范方法
+
+> 以下是Servlet接口定义的所有方法，这是**Servlet的核心,是Servlet的规范，所有的子类/扩展类都是以此为基础**。
+
+![image-20200615105954590](/image-20200615105954590.png)
+
+
+
+### Servlet结构体系
+
+> 以下是JAVA EE中，Servlet的结构设计体系。
+
+在IDEA中，show Diagrams-->ctrl+shift+B,全选。
+
+![image-20200615140058527](/image-20200615140058527.png)
+
+ctrl+shift+B查看最底下的HttpServlet实现类，可以发现是没有任何实现的。
+
+![image-20200615140223755](/image-20200615140223755.png)
+
+
+
+## Servlet核心API
+
+### 1）Servlet接口
+
+![image-20200615141140668](/image-20200615141140668.png)
+
+### 2）HttpServlet类
+
+doXXX()：doGet()/doPost()
+
+service()
+
+### 3）HttpServletRequest接口
+
+> 封装了Http的请求
+
+### 4）HttpServletResponse接口
+
+> 封装了Http的响应
 
 ## 生命周期
 
-首先知道一点，我们在程序中本身是**没有new Servlet对象**的，所以new对象、以及之后调用init/service/destory等等这些东西是**由web容器触发**的。servlet的生命周期由web容器控制。
+### servlet容器与servlet的关系
+
+==重点==：首先明确两点，我们在程序中编写的Servlet类，**一没有new Servlet对象**，**二没有main方法启动程序**。
+
+所以：**Servlet是就交给Servlet容器(Tomcat)进行处理的**，servlet的生命周期由web容器控制。
+
+servlet就好比子弹，Servlet容器就好比枪。这便是二者的关系
 
 ### 几个方法
 
@@ -36,7 +86,7 @@ Demo演示:
 <servlet>
 	<servlet-name>HelloServlet</servlet-name>
     <servlet-class>gz.itcast.a_servlet.HelloServlet</servlet-class>
-    <!--改变servlet对象创建的时机： tomcat服务器启动的时候就创建servlet对象.数值越小优先级越高
+<!--作用：tomcat服务器启动的时候就创建servlet对象。数值越小表示优先级越高-->
     <load-on-startup>1</load-on-startup>
 </servlet>
 
@@ -125,13 +175,6 @@ this.getServletContext().getRequestDispatcher("/xxxServlet").forward(request, re
 
 <img src="/wps4.jpg" alt="img" style="zoom:67%;" />
 
-## HttpServlet
-
-用于处理http协议的请求的servlet。对原Servlet中方法做了一些扩展和简化。
-继承关系：
-
-![servlet继承体系](/servlet继承体系.png)
-
 ## 路径
 
 ### 映射规则
@@ -199,6 +242,41 @@ mapping指要映射到哪里，location指哪些地址要被映射
 
 ​			6）如果读不到对应的静态资源文件，那么就返回404的错误页面。
 
+# ==Filter==
+
+> Servlet过滤器
+
+## 作用
+
+对请求和响应进行过滤
+
+# ==Listener==
+
+> Servlet监听器
+
+观察者设计模式，web程序中的监听器主要用于对 HttpSession、ServletRequest、ServletContext进行监控。
+
+## 种类
+
+ servlet规范中共有 8 种监听器(接口),可分为三类:
+
+### 1. 生命周期监听器
+
+- ServletRequestListener
+- HttpSessionListener
+- ServletContextListener
+
+### 2. 属性监听器
+
+- ServletRequestAttributeListener 
+- HttpSessionAttributeListener 
+- ServletContextAttributeListener    
+
+### 3. Session固有监听器
+
+- HttpSessionBindingListener
+- HttpSessionActivationListener
+
 ---
 
 # ==会话管理==
@@ -242,33 +320,4 @@ web应用程序，是基于http协议进行传输数据的。Http协议是无状
 
 ---
 
-# ==Filter==
-
-## 作用
-
-对请求和响应进行过滤
-
-# ==Listener==
-
-观察者设计模式，web程序中的监听器主要用于对 HttpSession、ServletRequest、ServletContext进行监控。
-
-## 种类
-
- servlet规范中共有 8 种监听器(接口),可分为三类:
-
-### 1. 生命周期监听器
-
-- ServletRequestListener
-- HttpSessionListener
-- ServletContextListener
-
-### 2. 属性监听器
-
-- ServletRequestAttributeListener 
-- HttpSessionAttributeListener 
-- ServletContextAttributeListener    
-
-### 3. Session固有监听器
-
-- HttpSessionBindingListener
-- HttpSessionActivationListener
+- 
