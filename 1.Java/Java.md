@@ -540,7 +540,7 @@ public interface TestAnnotation extends java.lang.annotation.Annotation {
 
 
 
-## 枚举
+## ==枚举==
 
 ### 定义枚举
 
@@ -626,6 +626,122 @@ public static org.hut.Season valueOf(java.lang.String);		// 覆盖父类方法�
 Season(){}
 //[枚举类的构造器不可以添加访问修饰符，枚举类的构造器默认是private的。但你自己不能添加private来修饰构造器。]
 ```
+
+### 注意：
+
+1. [比较枚举时推荐用==，不推荐用equals](https://www.cnblogs.com/xiohao/p/7405423.html)
+
+   - 不会抛出 NullPointerException
+
+   ```
+   enum Color { BLACK, WHITE };
+   
+   Color nothing = null;
+   if (nothing == Color.BLACK);      // runs fine
+   if (nothing.equals(Color.BLACK)); // throws NullPointerException
+   ```
+
+   - 在编译期检测类型兼容性
+
+   ```
+   enum Color { BLACK, WHITE };
+   enum Chiral { LEFT, RIGHT };
+   
+   if (Color.BLACK.equals(Chiral.LEFT)); // compiles fine
+   if (Color.BLACK == Chiral.LEFT);      // DOESN'T COMPILE!!! Incompatible types!
+   ```
+
+## ==正则==
+
+> 首先明确，正则表达式被运用在各种语言。但在每种语言上的使用有所差异。
+>
+> **作用**：灵活操作字符串
+>
+> [手册](https://tool.oschina.net/uploads/apidocs/jquery/regexp.html)
+
+### Java中的正则API
+
+java中的正则在java.util.regex 包；主要有以下几个类
+
+**Pattern 类：**
+
+> pattern 对象是一个正则表达式的**编译表示**
+
+转移符：这里的转义符用法逻辑和shell中grep等一些命令一样。
+在代码中，`\\在代码中会转义成\`，所以java中`\\d才表示\d`,`表示一个普通的反斜杠是 \\\\`
+
+**Matcher 类：**
+
+> Matcher 对象是对输入字符串进行解释和匹配操作的**引擎**
+>
+
+**PatternSyntaxException**
+
+> 表示正则表达式的语法错误， 是一个非强制异常类
+>
+
+#### 举例
+
+1. 典型调用例子：
+
+   ```java
+   // 获取正则表达式对象Pattern
+   Pattern p = Pattern.compile("a*b");
+   
+   //获取匹配引擎Matcher
+   Matcher m = p.matcher("aaaaab");
+   
+   // 匹配结果
+   boolean b = m.matches();
+   ```
+
+2. 针对上方的简化，但复用性弱
+
+   ```java
+   boolean b = Pattern.matches("a*b","aaaaab")
+   ```
+
+3. 捕获组**(实际常用**)
+
+  ```java
+Pattern pattern = Pattern.compile("(\\D*)(\\d+)(.*)");	
+  Matcher matcher = pattern.matcher("This order was placed for QT3000! OK?");
+while (matcher.find()){
+      System.out.println(matcher.group(0));	//This order was placed for QT3000! OK?
+      System.out.println(matcher.group(1));	//This order was placed for QT 
+      System.out.println(matcher.group(2));	//3000
+      System.out.println(matcher.group(3));	//! OK?
+  }
+  
+  1. 这里组的概念是针对正则表达式，也即在一条正则表达式中，用括号进行分组。
+  2. 先用整条去匹配，得到group(0)/group()。在整条中每组又会单独去匹配。
+  3. 组序列号：从左开始"("，第几个就是第几组。
+      e.g. ((A)(B(C)))
+      - group(0):((A)(B(C)))
+  	- group(1):(A)
+  	- group(2):(B(C))
+  	- group(3):(C)  
+  ```
+  
+4.  [Matcher 类的其他方法](https://www.runoob.com/java/java-regular-expressions.html)
+
+    
+
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

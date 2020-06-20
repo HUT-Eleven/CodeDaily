@@ -270,7 +270,7 @@ k:
 
 ### 1、@ConfigurationProperties
 
-> 作用：**只**读取**主配置文件**的属性，并通过前缀的方式来指定bean，再注入到javabean中。
+> 作用：只读取**主配置文件**的属性，并通过前缀的方式来指定bean，再注入到javabean中。
 >
 > **注意：该注解只读取主配置文件，不能直接读取其他配置文件**
 
@@ -344,11 +344,11 @@ k:
     ```java
     @Component
     public class Person {
-        @Value("${person.last-name}")	//${key}从环境变量
+        @Value("${person.last-name}")	//1. ${key}从环境变量
         private String lastName;
-        @Value("#{11*2}")				//#{spEL}
+        @Value("#{11*2}")				//2. #{spEL}
         private Integer age;
-        @Value("true")					//字面量（8种基本数据类型、String、枚举等）
+        @Value("true")					//3. 字面量（8种基本数据类型、String、枚举等）
         private Boolean boss;
     }
     ```
@@ -393,7 +393,7 @@ k:
 
 ```java
 @Component
-@PropertySource(value = {"classpath:person.properties"})
+@PropertySource(value = {"classpath:person.properties"})// 引入properties配置文件
 public class Person {
     @value("${lastname}")
     private String lastName;
