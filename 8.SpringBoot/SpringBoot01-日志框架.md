@@ -10,11 +10,11 @@ typora-root-url: ./images
 1. 目前流行的日志**实现**框架有：
 
     - JUL（jdk自带的日志框架，在java.util.logging中）
-    - log4j1
+    - log4j（也叫log4j1）
     - log4j2
     - logback
 2. 目前用于实现日志统一的框架（**接口门面**）：
-    - JCL（apache commons-logging）
+    - JCL（apache Jakarta commons-logging）
     - SLF4J（Simple Logging Facade for JAVA，java简单日志门面）
 
 | 日志门面                                                     | 日志实现                                                     |
@@ -25,7 +25,7 @@ typora-root-url: ./images
 
 #### 使用案例
 
-jdk内置，直接使用，无需导包：
+jdk内置：
 
 ```java
 import java.util.logging.Level;
@@ -62,7 +62,7 @@ public class Demo_JUL {
    log4j.appender.console = org.apache.log4j.ConsoleAppender
    log4j.appender.console.layout = org.apache.log4j.PatternLayout
    log4j.appender.console.layout.ConversionPattern = %-d{yyyy-MM-dd HH:mm:ss} %m%n
-   # 本次配置文件的内容不在此深入了解
+   # 本次不在此深入了解配置文件的内容
    ```
 
 3. 使用
@@ -147,7 +147,7 @@ log4j2也是日志的实现框架，但曾经也想像SLF4j,commons-logging一�
 
    - **logback-core**
    - **logback-classic**
-   - **slf4j-api**
+   - **slf4j-api**  （logback原本就是面向SLF4j编写的）
 
    ```xml
    <dependency> 
@@ -217,9 +217,9 @@ log4j2也是日志的实现框架，但曾经也想像SLF4j,commons-logging一�
 
 > 各常用框架如spring、mybatis、hibernate等等，使用的日志实现框架可能是不一样的，这样在系统应用中就可能出现出错，或者日志格式变化等问题。并且使用具体的日志框架也不便于应用系统之后更换日志系统，所以==日志门面==应运而生，也即面向接口编程。
 >
-> 现在市面上常用的日志门面：SLF4J、JCL (apache commons logging)
+> 现在市面上常用的日志门面：SLF4J、JCL (apache Jakarta commons logging)
 
-### commons-logging
+### JCL
 
 #### 使用案例
 
@@ -278,6 +278,8 @@ public static Log getLog(Class clazz) throws LogConfigurationException {
 
 - **==获取LogFactory==**
 
+  > 按以下顺序去获取LogFactory
+
   1. 系统属性中获取，如下:
 
      ```java
@@ -304,18 +306,20 @@ public static Log getLog(Class clazz) throws LogConfigurationException {
 
 - **==获取Log实例==**
 
+  > 按以下顺序去获取Log实例
+
   1. 从commons-logging的配置文件中寻找Log实现类的类名。属性为"org.apache.commons.logging.Log"；
 
   2. 从系统属性中寻找Log实现类的类名
-
+  
      ```java
-     System.getProperty("org.apache.commons.logging.Log")
+   System.getProperty("org.apache.commons.logging.Log"); -Dorg.apache.commons.logging.Log=xxxxxx
      ```
 
   3. 从classesToDiscover属性中寻找，也即Log的默认实现类：
 
      classesToDiscover属性值如下：它会尝试根据下面的类名，依次进行创建，如果能创建成功，则使用该Log，然后返回给用户。
-
+  
      ```java
      private static final String[] classesToDiscover = {
          LOGGING_IMPL_LOG4J_LOGGER,		// "org.apache.commons.logging.impl.Log4JLogger"
@@ -329,7 +333,7 @@ public static Log getLog(Class clazz) throws LogConfigurationException {
 
 ----------------==略过commons-logging与各日志实现框架的集成案例及原理分析==-------附上[地址](https://my.oschina.net/pingpangkuangmo/blog/407895)-----------------------
 
-### slf4j
+### SLF4J
 
 #### 使用案例
 
@@ -428,10 +432,9 @@ public static Log getLog(Class clazz) throws LogConfigurationException {
 
 1. 去掉log4j的jar包
 2. 加入以下包：
-   - log4j-over-slf4j
+   - log4j-over-slf4j： log4j转接到slf4j上
    - slf4j-api
-   - slf4j-api
-   - logback-classic
+   - logback-classic && logback-core
 3. logback的配置文件
 
 #### JUL->logbak
@@ -439,6 +442,12 @@ public static Log getLog(Class clazz) throws LogConfigurationException {
 #### JCL->logback
 
 #### 实际日志场景图解
+
+> 左1：其他日志转为logback输出
+>
+> 左2：其他日志转为JUL输出
+>
+> 右1：其他日志转为log4j输出
 
 ![1551703080968](.\统一日志框架.png)
 

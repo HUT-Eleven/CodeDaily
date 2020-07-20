@@ -420,7 +420,7 @@ If you want to take complete control of Spring MVC, you can add your own `@Confi
 通过**继承WebMvcConfigurerAdapter**来给容器**扩展**SpringMVC的配置。
 
 ```java
-@Configuration//这个不能少，只有放进了IOC容器，才可以被SpringBoot加载
+@Configuration
 public class MyMvcConfig extends WebMvcConfigurerAdapter {
 
     @Override

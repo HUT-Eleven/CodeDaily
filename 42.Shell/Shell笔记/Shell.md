@@ -35,7 +35,11 @@ OPTIONS:
         -r: 逐层遍历目录查找
         -l：只列出匹配的文件名
         -L：列出不匹配的文件名
-    -E:使用扩展正则匹配
+    -E:启用POSIX扩展正则表达式
+    -P:启用perl正则
+    	# POSIX扩展正则与perl正则的区别：
+    		POSIX 是 UNIX 遵循的标准, PERL 正则在 POSIX 上做了扩展，实现了很多方便的功能。兼容 Perl 的正则，叫 PCRE(Perl Compatible Regular Expression)
+    -o:只输出正则表达式匹配的内容
     ^key:以关键字开头
     key$:以关键字结尾
     ^$:匹配空行
@@ -63,7 +67,7 @@ OPTIONS:
 
 ```shell
 e.g. 查找\
-grep '\\' file		可以
+grep '\\' file		可以，shell直接传递\\给grep，grep转义后为\
 grep "\\\\" file	可以，shell把四个\,转义成2个\传递给grep，grep再把2个\转义成一个\查找
 ```
 
@@ -91,11 +95,17 @@ grep "\\\\" file	可以，shell把四个\,转义成2个\传递给grep，grep再�
 
   ```shell
   find . -type f -iname 'file_name' | xargs grep -irl '关键字'
-  
   # 如果是.gz压缩文件，可以用zgrep代替grep，zgrep同时也可搜索普通文件
+  
+  
   ```
 
-  
+- 搜索出两个指定字符串之间的内容,：
+
+  ```shell
+  # 如result="abc123dhf" 取出result的值,或者是json格式result:"abc123dhf"
+  grep -Po 'result[= "]+\K[^"]+' filename  \K在正则中的作用类似正后发断言
+  ```
 
 ###2. cut工具
 

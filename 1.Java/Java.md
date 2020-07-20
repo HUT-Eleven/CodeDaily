@@ -28,18 +28,19 @@ classpath：jvm启动类的路径，可多值，用分号隔开。
 > 指的是.class文件所在的**目录**，不是.class文件的位置。既然是.class文件，则讨论点应该是**项目打包后的目录结构**。
 
 一、以**SSM**架构项目举例，打成**==war==**包：
+
+<img src="/image-20200614121939444.png" alt="image-20200614121939444" style="zoom:60%;" />
+
 上部分是源代码的目录结构，下部分是编译打包后的目录结构。
 
 问：==哪里有.class文件呢？==
 
 答：WEB-INF/classes下  和  lib/xxx.jar包下。
 
-​	1. 对于引用我们自身写的配置文件时，则classpath=WEB-INF/classes,
-​	     e.g.  **引用classpath:config/application-dao.xml ，等价于WEB-INF/classes/config/application-dao.xml**，因为原本写在resource目录下的文件，被编译到了classes底下。
+	1. 对于引用我们自身写的配置文件时，则**classpath=WEB-INF/classes**,
+​	     e.g.  **引用classpath:config/application-dao.xml ，等价于WEB-INF/classes/config/application-dao.xml**，因为原本写在resource目录下的文件，被编译到了classes底下。所以有种说法是maven项目中，resource目录即classpath路径。
 
 ​	2. **对于maven引用的jar，其实本身也是一个项目**，所以此时的classpath可能会去自身jar中查找，当然也有可能去访问WEB-INF/classes目录
-
-<img src="/image-20200614121939444.png" alt="image-20200614121939444" style="zoom:60%;" />
 
 二、以SpringBoot项目为例，打成**==jar==**包
 
@@ -59,7 +60,7 @@ BOOT-INF/lib：maven依赖的jar
 
 ### 打jar包运行
 
-#### 打jar包方式
+#### 运行方式
 
 ##### 1. 原生命令打包
 
@@ -588,7 +589,7 @@ protected Enum(String name, int ordinal) {	//构造方法
     this.name = name;						//取个名
     this.ordinal = ordinal;					//序号，从0开始
 }
-name():取出枚举名
+name():取出枚举名	// System.out.println(Season.SPRING.name()); // SPRING
 oridinal():取序号
 valueOf(String):通过字符串得到枚举
 // 其他方法有用到再细品
@@ -651,17 +652,25 @@ Season(){}
    if (Color.BLACK == Chiral.LEFT);      // DOESN'T COMPILE!!! Incompatible types!
    ```
 
-## ==正则==
+## ==Regular expression==
 
 > 首先明确，正则表达式被运用在各种语言。但在每种语言上的使用有所差异。
 >
 > **作用**：灵活操作字符串
 >
-> [手册](https://tool.oschina.net/uploads/apidocs/jquery/regexp.html)
+> ==学习网址[learn-regex](https://github.com/ziishaned/learn-regex)==，从该网站下载下来的[学习文档](./杂项/正则-cn.md)
+>
+> ==正则[在线神器](https://regex101.com/)==：可验证正则，并直接生产java等多种语言代码。
 
-### Java中的正则API
+> [简略特殊字符集](https://tool.oschina.net/uploads/apidocs/jquery/regexp.html)
 
-java中的正则在java.util.regex 包；主要有以下几个类
+
+
+---
+
+### Java中正则相关类
+
+java中对于正则的操作类都在java.util.regex 包中：
 
 **Pattern 类：**
 
@@ -675,61 +684,111 @@ java中的正则在java.util.regex 包；主要有以下几个类
 > Matcher 对象是对输入字符串进行解释和匹配操作的**引擎**
 >
 
-**PatternSyntaxException**
+#### API
 
-> 表示正则表达式的语法错误， 是一个非强制异常类
->
+> API就是对应的正则的操作而来的：查找（即匹配）、替换、索引
 
-#### 举例
+##### 1. 查找
 
-1. 典型调用例子：
-
-   ```java
-   // 获取正则表达式对象Pattern
-   Pattern p = Pattern.compile("a*b");
-   
-   //获取匹配引擎Matcher
-   Matcher m = p.matcher("aaaaab");
-   
-   // 匹配结果
-   boolean b = m.matches();
-   ```
-
-2. 针对上方的简化，但复用性弱
-
-   ```java
-   boolean b = Pattern.matches("a*b","aaaaab")
-   ```
-
-3. 捕获组**(实际常用**)
+- 简单匹配：
 
   ```java
-Pattern pattern = Pattern.compile("(\\D*)(\\d+)(.*)");	
-  Matcher matcher = pattern.matcher("This order was placed for QT3000! OK?");
-while (matcher.find()){
-      System.out.println(matcher.group(0));	//This order was placed for QT3000! OK?
-      System.out.println(matcher.group(1));	//This order was placed for QT 
-      System.out.println(matcher.group(2));	//3000
-      System.out.println(matcher.group(3));	//! OK?
-  }
+  // 获取正则表达式对象Pattern
+  Pattern p = Pattern.compile("a*b");
   
-  1. 这里组的概念是针对正则表达式，也即在一条正则表达式中，用括号进行分组。
-  2. 先用整条去匹配，得到group(0)/group()。在整条中每组又会单独去匹配。
-  3. 组序列号：从左开始"("，第几个就是第几组。
-      e.g. ((A)(B(C)))
-      - group(0):((A)(B(C)))
+  //获取匹配引擎Matcher
+  Matcher m = p.matcher("aaaaab");
+  
+  // 匹配结果
+  boolean b = m.matches();
+  
+  
+  针对上方的简化，但复用性弱:
+  boolean b = Pattern.matches("a*b","aaaaab")
+  ```
+
+- 捕获组**(实际常用**)
+
+  ```java
+  Pattern pattern = Pattern.compile("(T|t)he\\s(fat|mat)");
+  Matcher matcher = pattern.matcher("The fat cat sat on the mat.");
+  while (matcher.find()) {
+      for (int i = 0; i <= matcher.groupCount(); i++) {
+          System.out.println("Group " + i + ": " + matcher.group(i));
+          System.out.println(matcher.start());
+          System.out.println(matcher.end());
+      }
+  }
+  /**
+  Group 0: The fat
+  Group 1: T
+  Group 2: fat
+  
+  Group 0: the mat
+  Group 1: t
+  Group 2: mat
+  
+  1. 先用整条去匹配，得到group(0)/group()。在整条中每组又会单独去匹配。
+  
+  2. 组序列号：从左开始"("，第几个就是第几组。
+      e.g. (A)(B(C))
+      - group(0):(A)(B(C))
   	- group(1):(A)
   	- group(2):(B(C))
   	- group(3):(C)  
+  
+  3. ((mat)):这里面就包含3组，组数=括号数+1
+  **/
+  ```
+
+  注：matcher(...)：**全部匹配**，是将整个字符串与pattern进行匹配
+
+  ​		find(...)：**部分匹配**，查找输入串中与模式匹配的**子串**，如果该匹配的串有组还可以使用group()函数。
+
+  ​		如果先matcher了，匹配器中的last(也即角标)会到最后，所以此时在find从last角标开始匹配是匹配不到数据的，可以reset(..)重置Matcher匹配器。这原理和迭代器很像。
+
+  
+
+##### 2. 替换
+
+- **replaceFirst** ：替换首次匹配
+  **replaceAll** ：替换所有匹配
+
+- **appendReplacement** ：将当前匹配子串替换为指定字符串，并且将替换后的子串以及其之前到上次匹配子串之后的字符串段添加到一个StringBuffer对象里
+  **appendTail**：将最后一次匹配工作后剩余的字符串添加到一个StringBuffer
+
+  ```java
+  Pattern p = Pattern.compile("2");
+  Matcher m = p.matcher("121211111");
+  StringBuffer sb = new StringBuffer();
+  while (m.find()) {
+      m.appendReplacement(sb, "3");
+      System.out.println("sb:" + sb);
+      // 第一次：sb:13，第二次：sb:1313
+  }
+  m.appendTail(sb);//将最后一次匹配工作后剩余的字符串‘11111’添加到一个StringBuffer中
+  System.out.println("sb:" + sb);	//输出内容:131311111
   ```
   
-4.  [Matcher 类的其他方法](https://www.runoob.com/java/java-regular-expressions.html)
+  
 
-    
+还有其他方法都是对应这正则里的API
 
-    
+1. 
 
-    
+2. java支持大小写敏感等
+
+   ```java
+   Pattern pattern = Pattern.compile("c.+t", Pattern.CASE_INSENSITIVE);
+   ```
+
+   
+
+  
+
+  
+
+  
 
 
 

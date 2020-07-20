@@ -547,7 +547,7 @@ spring:
 
 1、在配置文件中激活
 
-2、命令行，命令行优先级大于配置文件：
+2、在命令行激活：
 
 - IDE中：
 
@@ -824,7 +824,7 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
 
 **xxxAutoConfiguration:自动配置类,给容器中添加组件；**
 
-**xxxProperties:封装组件的默认属性,；**
+**xxxProperties:封装组件的默认属性；**
 
 
 
